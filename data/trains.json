@@ -1,0 +1,512 @@
+[
+  {
+    "id": "T01",
+    "mileage": 12500,
+    "branding_priority": 8,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "A12",
+    "last_maintenance_date": "2023-09-15"
+  },
+  {
+    "id": "T02",
+    "mileage": 14200,
+    "branding_priority": 3,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": false,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 1,
+      "open_non_critical": 2
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "B07",
+    "last_maintenance_date": "2023-08-30"
+  },
+  {
+    "id": "T03",
+    "mileage": 9800,
+    "branding_priority": 10,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "IBL_02",
+    "last_maintenance_date": "2023-09-20"
+  },
+  {
+    "id": "T04",
+    "mileage": 15675,
+    "branding_priority": 5,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": false
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "A05",
+    "last_maintenance_date": "2023-08-20"
+  },
+  {
+    "id": "T05",
+    "mileage": 11250,
+    "branding_priority": 1,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 3
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "C01",
+    "last_maintenance_date": "2023-09-18"
+  },
+  {
+    "id": "T06",
+    "mileage": 8700,
+    "branding_priority": 9,
+    "fitness_certificates": {
+      "rolling_stock": false,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 2,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "STB_10",
+    "last_maintenance_date": "2023-09-22"
+  },
+  {
+    "id": "T07",
+    "mileage": 13400,
+    "branding_priority": 7,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "B12",
+    "last_maintenance_date": "2023-09-10"
+  },
+  {
+    "id": "T08",
+    "mileage": 9900,
+    "branding_priority": 2,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "A08",
+    "last_maintenance_date": "2023-09-19"
+  },
+  {
+    "id": "T09",
+    "mileage": 14320,
+    "branding_priority": 6,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "STB_05",
+    "last_maintenance_date": "2023-09-05"
+  },
+  {
+    "id": "T10",
+    "mileage": 7650,
+    "branding_priority": 4,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 2
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "C10",
+    "last_maintenance_date": "2023-09-25"
+  },
+  {
+    "id": "T11",
+    "mileage": 11000,
+    "branding_priority": 12,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": false,
+      "telecom": false
+    },
+    "job_cards": {
+      "open_critical": 1,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "D04",
+    "last_maintenance_date": "2023-09-12"
+  },
+  {
+    "id": "T12",
+    "mileage": 13200,
+    "branding_priority": 15,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "E02",
+    "last_maintenance_date": "2023-09-08"
+  },
+  {
+    "id": "T13",
+    "mileage": 9500,
+    "branding_priority": 11,
+    "fitness_certificates": {
+      "rolling_stock": false,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "F01",
+    "last_maintenance_date": "2023-09-21"
+  },
+  {
+    "id": "T14",
+    "mileage": 14800,
+    "branding_priority": 7,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": false
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 2
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "G03",
+    "last_maintenance_date": "2023-09-14"
+  },
+  {
+    "id": "T15",
+    "mileage": 7800,
+    "branding_priority": 9,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "H05",
+    "last_maintenance_date": "2023-09-26"
+  },
+  {
+    "id": "T16",
+    "mileage": 16000,
+    "branding_priority": 4,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": false,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 1,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "I07",
+    "last_maintenance_date": "2023-09-09"
+  },
+  {
+    "id": "T17",
+    "mileage": 10500,
+    "branding_priority": 13,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "J09",
+    "last_maintenance_date": "2023-09-17"
+  },
+  {
+    "id": "T18",
+    "mileage": 12200,
+    "branding_priority": 6,
+    "fitness_certificates": {
+      "rolling_stock": false,
+      "signalling": false,
+      "telecom": false
+    },
+    "job_cards": {
+      "open_critical": 2,
+      "open_non_critical": 2
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "K11",
+    "last_maintenance_date": "2023-09-11"
+  },
+  {
+    "id": "T19",
+    "mileage": 13800,
+    "branding_priority": 8,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "L13",
+    "last_maintenance_date": "2023-09-13"
+  },
+  {
+    "id": "T20",
+    "mileage": 9200,
+    "branding_priority": 10,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": false
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "M15",
+    "last_maintenance_date": "2023-09-23"
+  },
+  {
+    "id": "T21",
+    "mileage": 11500,
+    "branding_priority": 5,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": false,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 1,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "N17",
+    "last_maintenance_date": "2023-09-16"
+  },
+  {
+    "id": "T22",
+    "mileage": 12600,
+    "branding_priority": 14,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 2
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "O19",
+    "last_maintenance_date": "2023-09-07"
+  },
+  {
+    "id": "T23",
+    "mileage": 10200,
+    "branding_priority": 3,
+    "fitness_certificates": {
+      "rolling_stock": false,
+      "signalling": true,
+      "telecom": false
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "P21",
+    "last_maintenance_date": "2023-09-24"
+  },
+  {
+    "id": "T24",
+    "mileage": 14400,
+    "branding_priority": 7,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "Q23",
+    "last_maintenance_date": "2023-09-06"
+  },
+  {
+    "id": "T25",
+    "mileage": 8500,
+    "branding_priority": 11,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": false,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 3
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "R25",
+    "last_maintenance_date": "2023-09-27"
+  },
+  {
+    "id": "T26",
+    "mileage": 13000,
+    "branding_priority": 9,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": false
+    },
+    "job_cards": {
+      "open_critical": 1,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "S27",
+    "last_maintenance_date": "2023-09-28"
+  },
+  {
+    "id": "T27",
+    "mileage": 9700,
+    "branding_priority": 12,
+    "fitness_certificates": {
+      "rolling_stock": false,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "T29",
+    "last_maintenance_date": "2023-09-29"
+  },
+  {
+    "id": "T28",
+    "mileage": 11900,
+    "branding_priority": 6,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": false,
+      "telecom": false
+    },
+    "job_cards": {
+      "open_critical": 2,
+      "open_non_critical": 1
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "U31",
+    "last_maintenance_date": "2023-09-30"
+  },
+  {
+    "id": "T29",
+    "mileage": 13500,
+    "branding_priority": 8,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 0
+    },
+    "requires_cleaning": true,
+    "current_stable_position": "V33",
+    "last_maintenance_date": "2023-10-01"
+  },
+  {
+    "id": "T30",
+    "mileage": 8800,
+    "branding_priority": 10,
+    "fitness_certificates": {
+      "rolling_stock": true,
+      "signalling": true,
+      "telecom": true
+    },
+    "job_cards": {
+      "open_critical": 0,
+      "open_non_critical": 2
+    },
+    "requires_cleaning": false,
+    "current_stable_position": "W35",
+    "last_maintenance_date": "2023-10-02"
+  }
+]
