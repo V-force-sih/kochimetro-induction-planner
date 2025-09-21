@@ -8,52 +8,69 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --metro-primary: #0078D4;
-            --metro-secondary: #FFB900;
-            --metro-dark: #212529;
+            /* Updated to a light-blue & white theme */
+            --metro-primary: #0ea5ff;
+            --metro-primary-dark: #0a8fe0;
+            --metro-secondary: #ffffff;
+            --metro-dark: #0b2545;
         }
         body {
-            background-color: #f8f9fa;
+            background: linear-gradient(180deg, #f7fbff 0%, #f0f7ff 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--metro-dark);
         }
         .navbar {
-            background: linear-gradient(135deg, var(--metro-primary), #005a9e);
+            background: linear-gradient(135deg, var(--metro-primary), var(--metro-primary-dark));
+            box-shadow: 0 4px 10px rgba(10, 143, 224, 0.12);
         }
         .card {
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(11,37,69,0.04);
             margin-bottom: 20px;
             border: none;
+            background: #ffffff;
         }
         .card-header {
-            background: linear-gradient(135deg, var(--metro-primary), #005a9e);
-            color: white;
+            background: transparent;
+            color: var(--metro-dark);
             border-radius: 10px 10px 0 0 !important;
         }
         .btn-metro {
-            background: var(--metro-secondary);
+            background: var(--metro-primary);
             border: none;
-            color: var(--metro-dark);
+            color: var(--metro-secondary);
             font-weight: bold;
         }
         .btn-metro:hover {
-            background: #e6a800;
+            background: var(--metro-primary-dark);
         }
         .train-card {
             transition: transform 0.2s;
+            border-radius: 8px;
         }
         .train-card:hover {
             transform: translateY(-2px);
         }
         .service-badge {
-            background-color: #28a745;
+            background-color: #e6faff;
+            color: var(--metro-primary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight:700;
         }
         .standby-badge {
-            background-color: #ffc107;
-            color: #212529;
+            background-color: #fff7e6;
+            color: #b36b00;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight:700;
         }
         .ibl-badge {
-            background-color: #dc3545;
+            background-color: #fff0f4;
+            color: #d6334f;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight:700;
         }
         .stats-card {
             text-align: center;
@@ -79,26 +96,58 @@
             border-radius: 50%;
             display: inline-block;
             margin-right: 5px;
+            vertical-align: middle;
         }
         .no-movement {
-            background-color: #28a745;
+            background-color: #b8f1d3;
         }
         .low-movement {
-            background-color: #ffc107;
+            background-color: #ffe9b3;
         }
         .high-movement {
-            background-color: #dc3545;
+            background-color: #ffb3c7;
         }
         .override-badge {
-            background-color: #6f42c1;
+            background-color: #7c9cff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight:700;
         }
         .overrides-list {
             max-height: 300px;
             overflow-y: auto;
         }
+        .debug-panel {
+            font-family: monospace;
+            font-size: 0.85rem;
+            background: #fbfcff;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        .conflict-card {
+            border-left: 4px solid #ff6b6b;
+            background: linear-gradient(90deg, rgba(255,235,235,0.9), rgba(255,250,240,0.9));
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .explanation-list { padding-left: 16px; margin-top: 6px; color: #123; }
+        /* small helper for the new branding control */
+        .branding-control { display:flex; gap:8px; align-items:center; }
+        .branding-control input[type="number"] { max-width: 140px; }
     </style>
 </head>
 <body>
+    <!-- Toast notifications -->
+    <div class="toast-container"></div>
+
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -127,12 +176,28 @@
                         <div class="mb-3">
                             <label class="form-label">Resources Available</label>
                             <div class="d-flex justify-content-between">
-                                <span class="badge bg-primary">IBL Capacity: 5 slots</span>
-                                <span class="badge bg-info">Cleaning Slots: 4</span>
+                                <span class="badge" style="background:#e6f8ff; color:var(--metro-primary);">IBL Capacity: 5 slots</span>
+                                <span class="badge" style="background:#eef9ff; color:var(--metro-primary);">Cleaning Slots: 4</span>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- NEW: Branding quota toggle + number input (non-breaking, small) -->
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Branding Quota (demo)</label>
+                        <div class="branding-control">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="brandingQuotaToggle">
+                                <label class="form-check-label" for="brandingQuotaToggle">Enforce minimum total branding exposure</label>
+                            </div>
+                            <input type="number" id="brandingMinTotal" class="form-control" placeholder="branding_min_total" min="0" step="1" value="" title="Enter total branding_priority target (e.g., 50)">
+                            <small class="text-muted">If enabled, this value will be sent to the backend as <code>branding_min_total</code>.</small>
+                        </div>
+                    </div>
+                </div>
+
                 <button id="runOptimization" class="btn btn-metro btn-lg w-100">
                     <i class="fas fa-bolt me-2"></i>Run Optimization
                 </button>
@@ -182,27 +247,69 @@
             </div>
         </div>
 
+        <!-- Debug Panel (initially hidden) -->
+        <div class="card mt-4" id="debugPanel" style="display: none;">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bug me-2"></i>Debug Information
+                    <button id="toggleDebug" class="btn btn-sm btn-outline-light float-end">Hide</button>
+                </h5>
+            </div>
+            <div class="card-body debug-panel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Last API Request</h6>
+                        <pre id="lastRequest">No requests yet</pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Last API Response</h6>
+                        <pre id="lastResponse">No responses yet</pre>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6>Connection Status</h6>
+                    <div id="connectionStatus" class="badge bg-success">Checking...</div>
+                    <button id="testConnection" class="btn btn-sm btn-outline-primary ms-2">
+                        Test Connection
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Show Debug Button -->
+        <div class="text-center mt-3">
+            <button id="showDebug" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-bug me-1"></i>Show Debug Panel
+            </button>
+        </div>
+
         <!-- Results Section -->
-        <div id="optimizationResults" class="card">
+        <div id="optimizationResults" class="card" style="display:none;">
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Optimization Results</h5>
             </div>
             <div class="card-body">
+                <!-- Conflicts container (new) -->
+                <div id="conflictsContainer" style="display:none;" class="conflict-card">
+                    <h6 class="mb-2">⚠️ Warnings / Conflicts</h6>
+                    <ul id="conflictList" class="mb-0"></ul>
+                </div>
+
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        <div class="card stats-card bg-success text-white">
+                        <div class="card stats-card">
                             <div class="stats-number" id="serviceCount">0</div>
                             <div>Service Trains</div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card stats-card bg-warning">
+                        <div class="card stats-card">
                             <div class="stats-number" id="standbyCount">0</div>
                             <div>Standby Trains</div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card stats-card bg-danger text-white">
+                        <div class="card stats-card">
                             <div class="stats-number" id="iblCount">0</div>
                             <div>IBL Trains</div>
                         </div>
@@ -231,10 +338,10 @@
                             </div>
                             <div class="col-md-6">
                                 <h6>Depot Layout</h6>
-                                <div id="depotVisualization" style="height: 200px; background: #f0f0f0; border-radius: 5px; display: flex; justify-content: space-around; align-items: center; padding: 10px;">
-                                    <div class="depot-zone" style="background: #28a745; color: white;">Service Zone<br>(A-W bays)</div>
-                                    <div class="depot-zone" style="background: #ffc107;">Standby Zone<br>(STB bays)</div>
-                                    <div class="depot-zone" style="background: #dc3545; color: white;">IBL Zone<br>(IBL bays)</div>
+                                <div id="depotVisualization" style="height: 200px; background: #f0f8ff; border-radius: 5px; display: flex; justify-content: space-around; align-items: center; padding: 10px;">
+                                    <div class="depot-zone" style="background: #e6faff; color: var(--metro-primary);">Service Zone<br>(A-W bays)</div>
+                                    <div class="depot-zone" style="background: #fff7e6; color: #b36b00;">Standby Zone<br>(STB bays)</div>
+                                    <div class="depot-zone" style="background: #fff0f4; color: #d6334f;">IBL Zone<br>(IBL bays)</div>
                                 </div>
                             </div>
                         </div>
@@ -268,58 +375,124 @@
         </div>
     </div>
 
+    <!-- bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        // Store the original train data (will be loaded from API)
+        // Keep originalTrainData shape same as before
         let originalTrainData = [];
 
-        // Get API base URL
         function getApiBase() {
-            return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                ? 'http://localhost:8000' 
+            return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:8000'
                 : 'https://your-deployed-api-url.com';
         }
 
-        // Function to load train data from backend API
-        async function loadTrainData() {
+        // safer showToast (same behavior)
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0`;
+            toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+            toastContainer.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast, { delay: 3500 });
+            bsToast.show();
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+
+        // safer logApiCall: handles missing body / non-JSON
+        function safeParseBody(body) {
+            if (!body) return null;
+            try { return JSON.parse(body); } catch (e) { return body; }
+        }
+        function logApiCall(url, options, response, data) {
+            try {
+                const requestLog = {
+                    url,
+                    method: options?.method || 'GET',
+                    headers: options?.headers || {},
+                    body: safeParseBody(options?.body)
+                };
+                document.getElementById('lastRequest').textContent = JSON.stringify(requestLog, null, 2);
+                document.getElementById('lastResponse').textContent = JSON.stringify({
+                    status: response?.status || 'N/A',
+                    statusText: response?.statusText || '',
+                    data: data || null
+                }, null, 2);
+            } catch (e) { /* non-fatal logging error */ console.warn('logApiCall failed', e); }
+        }
+
+        // Test API connection
+        async function testConnection() {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.className = 'badge bg-secondary';
+            statusElement.textContent = 'Testing...';
+
             try {
                 const API_BASE = getApiBase();
-                
                 const response = await fetch(`${API_BASE}/trains`);
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    originalTrainData = data.data;
-                    console.log('Loaded train data:', originalTrainData.length, 'trains');
+
+                if (response.ok) {
+                    statusElement.className = 'badge bg-success';
+                    statusElement.textContent = 'Connected';
+                    showToast('API connection successful', 'success');
                 } else {
-                    console.error('Failed to load train data');
+                    statusElement.className = 'badge bg-warning';
+                    statusElement.textContent = `Error: ${response.status}`;
+                    showToast(`API connection error: ${response.status}`, 'warning');
                 }
             } catch (error) {
-                console.error('Error loading train data:', error);
+                statusElement.className = 'badge bg-danger';
+                statusElement.textContent = 'Failed';
+                showToast(`API connection failed: ${error.message}`, 'danger');
             }
         }
 
-        // Function to load and display overrides
+        // Load train data
+        async function loadTrainData() {
+            try {
+                const API_BASE = getApiBase();
+                const response = await fetch(`${API_BASE}/trains`);
+                const data = await response.json();
+                logApiCall(`${API_BASE}/trains`, { method: 'GET' }, response, data);
+
+                if (data.status === 'success') {
+                    originalTrainData = data.data;
+                    console.log('Loaded train data:', originalTrainData.length, 'trains');
+                    showToast(`Loaded data for ${originalTrainData.length} trains`, 'success');
+                } else {
+                    console.error('Failed to load train data');
+                    showToast('Failed to load train data', 'danger');
+                }
+            } catch (error) {
+                console.error('Error loading train data:', error);
+                showToast(`Error loading train data: ${error.message}`, 'danger');
+            }
+        }
+
+        // Load overrides (unchanged behavior) — but remove button will call delete path
         async function loadOverrides() {
             try {
                 const API_BASE = getApiBase();
                 const response = await fetch(`${API_BASE}/overrides`);
                 const data = await response.json();
-                
+                logApiCall(`${API_BASE}/overrides`, { method: 'GET' }, response, data);
+
                 const overridesContainer = document.getElementById('currentOverrides');
-                
+                overridesContainer.innerHTML = '';
+
                 if (data.overrides && data.overrides.length > 0) {
-                    overridesContainer.innerHTML = '';
-                    
                     data.overrides.forEach(override => {
                         const overrideElement = document.createElement('div');
-                        overrideElement.className = 'card mb-2';
+                        overrideElement.className = 'card mb-2 p-2';
                         overrideElement.innerHTML = `
-                            <div class="card-body p-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="badge override-badge">${override.train_id}</span>
-                                    <span class="badge ${getBadgeClassForAction(override.action)}">${override.action.toUpperCase()}</span>
-                                    <small class="text-muted">${override.force ? 'Forced' : 'Normal'}</small>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="override-badge">${override.train_id}</span>
+                                    <span class="badge ms-2 ${getBadgeClassForAction(override.action)}">${override.action.toUpperCase()}</span>
+                                    <small class="text-muted ms-2">${override.force ? 'Forced' : 'Normal'}</small>
+                                </div>
+                                <div>
                                     <button class="btn btn-sm btn-outline-danger remove-override" data-train-id="${override.train_id}">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -328,137 +501,114 @@
                         `;
                         overridesContainer.appendChild(overrideElement);
                     });
-                    
-                    // Add event listeners to remove buttons
+
+                    // attach listeners (uses updated removeOverride below)
                     document.querySelectorAll('.remove-override').forEach(button => {
                         button.addEventListener('click', function() {
                             const trainId = this.getAttribute('data-train-id');
                             removeOverride(trainId);
                         });
                     });
+
+                    showToast(`Loaded ${data.overrides.length} overrides`, 'success');
                 } else {
                     overridesContainer.innerHTML = '<p class="text-muted">No overrides currently set.</p>';
+                    showToast('No overrides found', 'info');
                 }
             } catch (error) {
                 console.error('Error loading overrides:', error);
                 document.getElementById('currentOverrides').innerHTML = '<p class="text-danger">Error loading overrides</p>';
+                showToast(`Error loading overrides: ${error.message}`, 'danger');
             }
         }
 
-        // Function to set an override
+        // Set override (same endpoint)
         async function setOverride() {
             const trainId = document.getElementById('overrideTrainId').value.trim();
             const action = document.getElementById('overrideAction').value;
             const force = document.getElementById('overrideForce').checked;
-            
-            if (!trainId) {
-                alert('Please enter a Train ID');
-                return;
-            }
-            
+
+            if (!trainId) { showToast('Please enter a Train ID', 'warning'); return; }
+
             const btn = document.getElementById('setOverride');
             const originalText = btn.innerHTML;
-            
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Setting Override...';
             btn.disabled = true;
-            
+
             try {
                 const API_BASE = getApiBase();
-                
+                const requestBody = JSON.stringify({ train_id: trainId, action: action, force: force });
+
                 const response = await fetch(`${API_BASE}/override`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        train_id: trainId,
-                        action: action,
-                        force: force
-                    })
+                    body: requestBody
                 });
-                
-                const data = await response.json();
-                
+
+                let data;
+                try { data = await response.json(); } catch (e) { throw new Error(`Invalid JSON response: ${await response.text()}`); }
+
+                logApiCall(`${API_BASE}/override`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody }, response, data);
+
                 if (data.status === 'success') {
-                    alert(`Override set successfully for train ${trainId}`);
+                    showToast(`Override set successfully for train ${trainId}`, 'success');
                     document.getElementById('overrideTrainId').value = '';
                     document.getElementById('overrideForce').checked = false;
-                    
-                    // Refresh the overrides list
                     loadOverrides();
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'danger');
                 }
             } catch (error) {
                 console.error('Error setting override:', error);
-                alert('Connection error: ' + error.message);
+                showToast(`Error setting override: ${error.message}`, 'danger');
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
 
-        // Function to remove an override
+        // Remove override: updated to call DELETE /override/{train_id} (matches updated api.py)
         async function removeOverride(trainId) {
             try {
                 const API_BASE = getApiBase();
-                
-                const response = await fetch(`${API_BASE}/override`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        train_id: trainId
-                    })
+                const response = await fetch(`${API_BASE}/override/${encodeURIComponent(trainId)}`, {
+                    method: 'DELETE'
                 });
-                
                 const data = await response.json();
-                
+                logApiCall(`${API_BASE}/override/${trainId}`, { method: 'DELETE' }, response, data);
+
                 if (data.status === 'success') {
-                    alert(`Override removed successfully for train ${trainId}`);
-                    
-                    // Refresh the overrides list
+                    showToast(`Override removed successfully for train ${trainId}`, 'success');
                     loadOverrides();
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + (data.message || 'Failed to remove override'), 'danger');
                 }
             } catch (error) {
                 console.error('Error removing override:', error);
-                alert('Connection error: ' + error.message);
+                showToast(`Error removing override: ${error.message}`, 'danger');
             }
         }
 
-        // Helper function to get badge class based on action
         function getBadgeClassForAction(action) {
             switch(action) {
                 case 'service': return 'bg-success';
-                case 'standby': return 'bg-warning';
+                case 'standby': return 'bg-warning text-dark';
                 case 'ibl': return 'bg-danger';
                 default: return 'bg-secondary';
             }
         }
 
-        // Load train data when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            loadTrainData();
-            
-            // Add event listeners for override functionality
-            document.getElementById('setOverride').addEventListener('click', setOverride);
-            document.getElementById('loadOverrides').addEventListener('click', loadOverrides);
-        });
-
-        // Function to determine zone from position
+        // Determine zone from position
         function getZoneFromPosition(position) {
             if (!position) return "Unknown";
-            
             if (position.includes("STB")) return "Standby";
             if (position.includes("IBL")) return "IBL";
-            
-            // Check if it's a Service zone (A-W)
             const firstChar = position.charAt(0);
             if (firstChar >= 'A' && firstChar <= 'W') return "Service";
-            
             return "Unknown";
         }
 
-        // Function to calculate movement cost between zones
+        // Movement cost function (keeps existing matrix)
         function getMovementCost(fromZone, toZone) {
             const costMatrix = {
                 "Service": {"Service": 0, "Standby": 2, "IBL": 3, "Unknown": 3},
@@ -466,23 +616,22 @@
                 "IBL": {"Service": 3, "Standby": 1, "IBL": 0, "Unknown": 3},
                 "Unknown": {"Service": 3, "Standby": 3, "IBL": 3, "Unknown": 3}
             };
-            
-            return costMatrix[fromZone][toZone] || 3;
+            return costMatrix[fromZone] ? (costMatrix[fromZone][toZone] || 3) : 3;
         }
 
-        // Calculate stabling information
+        // Calculate stabling info (unchanged)
         function calculateStablingInfo(solution) {
             let movementCost = 0;
             let trainsMoved = 0;
             const movementDetails = [];
-            
+
             solution.service.forEach(train => {
                 const originalTrain = originalTrainData.find(t => t.id === train.id);
                 if (originalTrain) {
                     const fromZone = getZoneFromPosition(originalTrain.current_stable_position);
                     const toZone = "Service";
                     const cost = getMovementCost(fromZone, toZone);
-                    
+
                     if (cost > 0) {
                         movementCost += cost;
                         trainsMoved++;
@@ -495,14 +644,14 @@
                     }
                 }
             });
-            
+
             solution.standby.forEach(train => {
                 const originalTrain = originalTrainData.find(t => t.id === train.id);
                 if (originalTrain) {
                     const fromZone = getZoneFromPosition(originalTrain.current_stable_position);
                     const toZone = "Standby";
                     const cost = getMovementCost(fromZone, toZone);
-                    
+
                     if (cost > 0) {
                         movementCost += cost;
                         trainsMoved++;
@@ -515,14 +664,14 @@
                     }
                 }
             });
-            
+
             solution.ibl.forEach(train => {
                 const originalTrain = originalTrainData.find(t => t.id === train.id);
                 if (originalTrain) {
                     const fromZone = getZoneFromPosition(originalTrain.current_stable_position);
                     const toZone = "IBL";
                     const cost = getMovementCost(fromZone, toZone);
-                    
+
                     if (cost > 0) {
                         movementCost += cost;
                         trainsMoved++;
@@ -535,77 +684,139 @@
                     }
                 }
             });
-            
+
             return { movementCost, trainsMoved, movementDetails };
         }
 
-        // Run optimization when button is clicked
+        // Run optimization
         document.getElementById('runOptimization').addEventListener('click', runOptimization);
+        document.getElementById('setOverride').addEventListener('click', setOverride);
+        document.getElementById('loadOverrides').addEventListener('click', loadOverrides);
+        document.getElementById('showDebug').addEventListener('click', function() {
+            document.getElementById('debugPanel').style.display = 'block';
+            this.style.display = 'none';
+            testConnection();
+        });
+        document.getElementById('toggleDebug').addEventListener('click', function() {
+            document.getElementById('debugPanel').style.display = 'none';
+            document.getElementById('showDebug').style.display = 'inline-block';
+        });
+        document.getElementById('testConnection').addEventListener('click', testConnection);
 
         async function runOptimization() {
             const btn = document.getElementById('runOptimization');
-            const trainsRequired = document.getElementById('trainsRequired').value;
-            
+            const trainsRequired = parseInt(document.getElementById('trainsRequired').value || "0", 10);
+
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Optimizing...';
             btn.disabled = true;
-            
+
             try {
                 const API_BASE = getApiBase();
+
+                // Build the request payload and include branding_min_total if toggle enabled
+                const payload = { required_trains: trainsRequired };
+
+                const brandingEnabled = document.getElementById('brandingQuotaToggle').checked;
+                if (brandingEnabled) {
+                    const brandingValRaw = document.getElementById('brandingMinTotal').value;
+                    if (brandingValRaw === null || String(brandingValRaw).trim() === '') {
+                        showToast('Branding quota enabled but no value entered', 'warning');
+                        btn.innerHTML = '<i class="fas fa-bolt me-2"></i>Run Optimization';
+                        btn.disabled = false;
+                        return;
+                    }
+                    const brandingVal = parseFloat(brandingValRaw);
+                    if (Number.isNaN(brandingVal) || brandingVal < 0) {
+                        showToast('branding_min_total must be a non-negative number', 'warning');
+                        btn.innerHTML = '<i class="fas fa-bolt me-2"></i>Run Optimization';
+                        btn.disabled = false;
+                        return;
+                    }
+                    payload.branding_min_total = brandingVal;
+                }
+
+                const requestBody = JSON.stringify(payload);
 
                 const response = await fetch(`${API_BASE}/optimize`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ required_trains: parseInt(trainsRequired) })
+                    body: requestBody
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const data = await response.json();
-                
+                logApiCall(`${API_BASE}/optimize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody }, response, data);
+
                 if (data.status === 'success') {
-                    displayResults(data.solution);
+                    // New: support explanations and conflict_alert
+                    const explanations = data.explanations || {};
+                    let conflicts = data.conflict_alert || null;
+                    if (typeof conflicts === 'string') conflicts = [conflicts];
+                    displayResults(data.solution, explanations, conflicts);
+                    showToast('Optimization completed successfully', 'success');
                 } else {
-                    alert('Error: ' + data.message);
+                    // If API returns error, show message (unchanged behavior)
+                    showToast('Error: ' + data.message, 'danger');
                 }
             } catch (error) {
                 console.error('Full error details:', error);
-                alert('Connection error: ' + error.message + '. Make sure the backend server is running on port 8000.');
+                showToast(`Connection error: ${error.message}. Make sure the backend server is running on port 8000.`, 'danger');
             } finally {
                 btn.innerHTML = '<i class="fas fa-bolt me-2"></i>Run Optimization';
                 btn.disabled = false;
             }
         }
 
-        function displayResults(solution) {
+        // displayResults now accepts optional explanations and conflicts (non-breaking)
+        function displayResults(solution, explanations = {}, conflicts = null) {
             // Update counts
             document.getElementById('serviceCount').textContent = solution.service.length;
             document.getElementById('standbyCount').textContent = solution.standby.length;
             document.getElementById('iblCount').textContent = solution.ibl.length;
-            
-            // Calculate and display stabling information
+
+            // Stabling info
             const stablingInfo = calculateStablingInfo(solution);
             document.getElementById('totalMovementCost').textContent = stablingInfo.movementCost;
             document.getElementById('trainsMoved').textContent = stablingInfo.trainsMoved;
-            
-            // Display service trains with movement indicators
+
+            // Conflicts (new)
+            const conflictsContainer = document.getElementById('conflictsContainer');
+            const conflictList = document.getElementById('conflictList');
+            conflictList.innerHTML = '';
+            if (conflicts && Array.isArray(conflicts) && conflicts.length > 0) {
+                conflicts.forEach(msg => {
+                    const li = document.createElement('li');
+                    li.textContent = msg;
+                    conflictList.appendChild(li);
+                });
+                conflictsContainer.style.display = 'block';
+            } else {
+                conflictsContainer.style.display = 'none';
+            }
+
+            // Render trains (keeps original card layout, adds an explanation toggle)
             const serviceContainer = document.getElementById('serviceTrains');
             serviceContainer.innerHTML = solution.service.map(train => {
                 const originalTrain = originalTrainData.find(t => t.id === train.id);
                 const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
                 const cost = getMovementCost(fromZone, "Service");
-                
                 let movementClass = "no-movement";
                 if (cost === 2) movementClass = "low-movement";
                 else if (cost >= 3) movementClass = "high-movement";
-                
+
+                // explanation HTML (if present)
+                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
+                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
+
                 return `
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="card train-card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <span class="badge service-badge">${train.id}</span>
+                                <span class="service-badge">${train.id}</span>
                                 <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
                             </h5>
                             <p class="card-text">
@@ -614,29 +825,31 @@
                                 <strong>Current Position:</strong> ${originalTrain ? originalTrain.current_stable_position : 'N/A'}<br>
                                 <strong>Fitness:</strong> ${getFitnessStatus(train)}
                             </p>
+                            ${explHtml}
                         </div>
                     </div>
                 </div>
                 `;
             }).join('');
-            
-            // Display standby trains
+
             const standbyContainer = document.getElementById('standbyTrains');
             standbyContainer.innerHTML = solution.standby.map(train => {
                 const originalTrain = originalTrainData.find(t => t.id === train.id);
                 const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
                 const cost = getMovementCost(fromZone, "Standby");
-                
                 let movementClass = "no-movement";
                 if (cost === 2) movementClass = "low-movement";
                 else if (cost >= 3) movementClass = "high-movement";
-                
+
+                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
+                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
+
                 return `
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="card train-card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <span class="badge standby-badge">${train.id}</span>
+                                <span class="standby-badge">${train.id}</span>
                                 <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
                             </h5>
                             <p class="card-text">
@@ -644,29 +857,31 @@
                                 <strong>Current Position:</strong> ${originalTrain ? originalTrain.current_stable_position : 'N/A'}<br>
                                 <strong>Fitness:</strong> ${getFitnessStatus(train)}
                             </p>
+                            ${explHtml}
                         </div>
                     </div>
                 </div>
                 `;
             }).join('');
-            
-            // Display IBL trains
+
             const iblContainer = document.getElementById('iblTrains');
             iblContainer.innerHTML = solution.ibl.map(train => {
                 const originalTrain = originalTrainData.find(t => t.id === train.id);
                 const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
                 const cost = getMovementCost(fromZone, "IBL");
-                
                 let movementClass = "no-movement";
                 if (cost === 2) movementClass = "low-movement";
                 else if (cost >= 3) movementClass = "high-movement";
-                
+
+                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
+                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
+
                 return `
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="card train-card">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <span class="badge ibl-badge">${train.id}</span>
+                                <span class="ibl-badge">${train.id}</span>
                                 <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
                             </h5>
                             <p class="card-text">
@@ -674,22 +889,28 @@
                                 <strong>Current Position:</strong> ${originalTrain ? originalTrain.current_stable_position : 'N/A'}<br>
                                 <strong>Fitness:</strong> ${getFitnessStatus(train)}
                             </p>
+                            ${explHtml}
                         </div>
                     </div>
                 </div>
                 `;
             }).join('');
-            
+
             // Show results section
             document.getElementById('optimizationResults').style.display = 'block';
         }
 
         function getFitnessStatus(train) {
-            const certs = train.fitness_certificates;
-            return certs.rolling_stock && certs.signalling && certs.telecom 
-                ? '<span class="badge bg-success">Valid</span>' 
+            const certs = train.fitness_certificates || {};
+            return certs.rolling_stock && certs.signalling && certs.telecom
+                ? '<span class="badge bg-success">Valid</span>'
                 : '<span class="badge bg-danger">Invalid</span>';
         }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTrainData();
+        });
     </script>
 </body>
 </html>

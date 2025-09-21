@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kochi Metro - Depot Scheduler</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --metro-primary: #4a86e8;
+            --metro-secondary: #6aa84f;
+            --metro-accent: #ff9900;
+            --metro-light: #e6f2ff;
+            --metro-dark: #2c3e50;
+            --service-zone: #4a86e8;
+            --standby-zone: #6aa84f;
+            --ibl-zone: #e67c73;
+        }
+        
+        body {
+            background-color: #f9fbff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #2c3e50;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--metro-primary), #3a76d8);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+            border: none;
+            background: white;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--metro-primary), #3a76d8);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 16px 20px;
+            font-weight: 600;
+        }
+        
+        .btn-metro {
+            background: var(--metro-accent);
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: all 0.3s;
+        }
+        
+        .btn-metro:hover {
+            background: #e68a00;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn-outline-metro {
+            border: 2px solid var(--metro-primary);
+            color: var(--metro-primary);
+            background: transparent;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 8px 18px;
+            transition: all 0.3s;
+        }
+        
+        .btn-outline-metro:hover {
+            background: var(--metro-primary);
+            color: white;
+        }
+        
+        .depot-visualization {
+            display: flex;
+            height: 500px;
+            background-color: var(--metro-light);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bay {
+            flex: 1;
+            margin: 0 8px;
+            border: 2px solid #d1e0ff;
+            border-radius: 8px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            position: relative;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .bay:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .bay-header {
+            text-align: center;
+            font-weight: bold;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #e6f2ff;
+            color: var(--metro-dark);
+        }
+        
+        .train-slot {
+            height: 36px;
+            margin: 6px 0;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .train-slot:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .train-slot::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+            pointer-events: none;
+        }
+        
+        .service-train {
+            background: linear-gradient(135deg, var(--service-zone), #3a76d8);
+        }
+        
+        .standby-train {
+            background: linear-gradient(135deg, var(--standby-zone), #5a984f);
+        }
+        
+        .ibl-train {
+            background: linear-gradient(135deg, var(--ibl-zone), #d76c63);
+        }
+        
+        .track {
+            position: absolute;
+            background-color: #c1d7ff;
+            z-index: 0;
+            border-radius: 3px;
+        }
+        
+        .track-horizontal {
+            height: 8px;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .track-vertical {
+            width: 8px;
+            height: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .path-arrow {
+            position: absolute;
+            color: var(--metro-primary);
+            font-size: 24px;
+            z-index: 2;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.6; transform: scale(1); }
+        }
+        
+        .schedule-timeline {
+            height: 320px;
+            margin-top: 24px;
+        }
+        
+        .priority-badge {
+            font-size: 0.75em;
+            margin-left: 5px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            padding: 2px 5px;
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+        }
+        
+        .stats-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--metro-primary);
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            color: var(--metro-dark);
+            font-weight: 500;
+        }
+        
+        .movement-cost {
+            font-weight: bold;
+            color: var(--metro-primary);
+        }
+        
+        .safety-alert {
+            color: #e67c73;
+            font-weight: bold;
+            background: #ffefed;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #e67c73;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #e6f2ff;
+        }
+        
+        .simulation-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        .train-movement {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--metro-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: moveTrain 4s linear infinite;
+        }
+        
+        @keyframes moveTrain {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(400px, 0); }
+        }
+        
+        .tooltip-info {
+            cursor: help;
+            color: var(--metro-primary);
+            margin-left: 5px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 6px;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.85);
+            transition: all 0.3s;
+            border-radius: 6px;
+            padding: 6px 12px !important;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.15);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-subway me-2"></i>
+                Kochi Metro - Depot Scheduler
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="dashboard.html"><i class="fas fa-tachometer-alt me-1"></i> Induction Planner</a>
+                <a class="nav-link active" href="#"><i class="fas fa-route me-1"></i> Depot Scheduler</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header and Controls -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-route me-2"></i>Depot Scheduling Simulation</h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <p class="mb-0">This visualization shows detailed depot operations after train induction planning. It optimizes bay assignments, minimizes movement costs, and ensures safety gaps between trains.</p>
+                    </div>
+                    <div class="col-md-4 simulation-controls">
+                        <button id="runSimulation" class="btn btn-metro">
+                            <i class="fas fa-play me-2"></i>Run Simulation
+                        </button>
+                        <button id="resetSimulation" class="btn btn-outline-metro">
+                            <i class="fas fa-sync-alt me-2"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Depot Visualization -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Depot Layout Visualization</h5>
+                <div class="d-flex">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--service-zone);"></div>
+                        <small>Service</small>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--standby-zone);"></div>
+                        <small>Standby</small>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--ibl-zone);"></div>
+                        <small>IBL</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="depot-visualization">
+                    <!-- Tracks -->
+                    <div class="track track-horizontal"></div>
+                    <div class="track track-vertical"></div>
+                    
+                    <!-- Bays -->
+                    <div class="bay">
+                        <div class="bay-header">Bay 1<br><small>Service</small></div>
+                        <div class="train-slot service-train">T16<br><span class="priority-badge">3</span></div>
+                        <div class="train-slot service-train">T20<br><span class="priority-badge">3</span></div>
+                        <div class="train-slot service-train">T2<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot service-train">T7<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot service-train">T10<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot service-train">T27<br><span class="priority-badge">2</span></div>
+                    </div>
+                    
+                    <div class="bay">
+                        <div class="bay-header">Bay 2<br><small>Service</small></div>
+                        <div class="train-slot service-train">T11<br><span class="priority-badge">3</span></div>
+                        <div class="train-slot service-train">T21<br><span class="priority-badge">3</span></div>
+                        <div class="train-slot service-train">T25<br><span class="priority-badge">3</span></div>
+                        <div class="train-slot service-train">T1<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot service-train">T30<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot service-train">T18<br><span class="priority-badge">1</span></div>
+                    </div>
+                    
+                    <div class="bay">
+                        <div class="bay-header">Bay 3<br><small>Service</small></div>
+                        <div class="train-slot service-train">T4<br><span class="priority-badge">3</span></div>
+                        <div class="train-slot service-train">T17<br><span class="priority-badge">3</span></div>
+                        <div class="train-slot service-train">T29<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot service-train">T12<br><span class="priority-badge">1</span></div>
+                        <div class="train-slot service-train">T24<br><span class="priority-badge">1</span></div>
+                    </div>
+                    
+                    <div class="bay">
+                        <div class="bay-header">Bay 4<br><small>Standby</small></div>
+                        <div class="train-slot standby-train">T19<br><span class="priority-badge">3</span></div>
+                        <div class="train-slot standby-train">T23<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot standby-train">T8<br><span class="priority-badge">1</span></div>
+                        <div class="train-slot standby-train">T26<br><span class="priority-badge">1</span></div>
+                    </div>
+                    
+                    <div class="bay">
+                        <div class="bay-header">Bay 5<br><small>IBL</small></div>
+                        <div class="train-slot ibl-train">T5<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot ibl-train">T9<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot ibl-train">T14<br><span class="priority-badge">2</span></div>
+                        <div class="train-slot ibl-train">T28<br><span class="priority-badge">1</span></div>
+                    </div>
+                    
+                    <!-- Path arrows will be added dynamically with JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics and Metrics -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="totalTrains">24</div>
+                    <div class="stats-label">Trains Scheduled</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="totalCost">842</div>
+                    <div class="stats-label">Total Movement Cost</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="avgCost">35.1</div>
+                    <div class="stats-label">Avg Cost per Train</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduling Results -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list-check me-2"></i>Scheduling Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Train ID</th>
+                                <th>Bay</th>
+                                <th>Path</th>
+                                <th>Arrival</th>
+                                <th>End Time</th>
+                                <th>Cost</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTable">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Visualization -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Bay Occupancy Timeline</h5>
+            </div>
+            <div class="card-body">
+                <div class="schedule-timeline">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sample data based on the output you provided
+        const scheduleData = [
+            { train: '4', bay: 'Bay3', path: 'Bay1 → Bay3', arrival: 6, end: 68, cost: 62, priority: 3, status: 'Accepted' },
+            { train: '11', bay: 'Bay2', path: 'Bay1 → Bay2', arrival: 20, end: 62, cost: 42, priority: 3, status: 'Accepted' },
+            { train: '16', bay: 'Bay1', path: 'Bay1', arrival: 30, end: 40, cost: 10, priority: 3, status: 'Accepted' },
+            { train: '17', bay: 'Bay3', path: 'Bay1 → Bay3', arrival: 32, end: 94, cost: 62, priority: 3, status: 'Accepted' },
+            { train: '19', bay: 'Bay4', path: 'Bay1 → Bay2 → Bay4', arrival: 36, end: 68, cost: 32, priority: 3, status: 'Accepted' },
+            { train: '20', bay: 'Bay1', path: 'Bay1', arrival: 38, end: 48, cost: 10, priority: 3, status: 'Accepted' },
+            { train: '21', bay: 'Bay2', path: 'Bay1 → Bay2', arrival: 40, end: 82, cost: 42, priority: 3, status: 'Accepted' },
+            { train: '25', bay: 'Bay2', path: 'Bay1 → Bay2', arrival: 48, end: 90, cost: 42, priority: 3, status: 'Accepted' },
+            { train: '1', bay: 'Bay2', path: 'Bay1 → Bay2', arrival: 0, end: 42, cost: 42, priority: 2, status: 'Accepted' },
+            { train: '2', bay: 'Bay1', path: 'Bay1', arrival: 2, end: 12, cost: 10, priority: 2, status: 'Accepted' },
+            { train: '5', bay: 'Bay5', path: 'Bay1 → Bay3 → Bay5', arrival: 8, end: 70, cost: 62, priority: 2, status: 'Accepted' },
+            { train: '7', bay: 'Bay1', path: 'Bay1', arrival: 12, end: 22, cost: 10, priority: 2, status: 'Accepted' },
+            { train: '9', bay: 'Bay5', path: 'Bay1 → Bay3 → Bay5', arrival: 16, end: 78, cost: 62, priority: 2, status: 'Accepted' },
+            { train: '10', bay: 'Bay1', path: 'Bay1', arrival: 18, end: 28, cost: 10, priority: 2, status: 'Accepted' },
+            { train: '14', bay: 'Bay5', path: 'Bay1 → Bay3 → Bay5', arrival: 26, end: 88, cost: 62, priority: 2, status: 'Accepted' },
+            { train: '23', bay: 'Bay4', path: 'Bay1 → Bay2 → Bay4', arrival: 44, end: 76, cost: 32, priority: 2, status: 'Accepted' },
+            { train: '27', bay: 'Bay1', path: 'Bay1', arrival: 52, end: 62, cost: 10, priority: 2, status: 'Accepted' },
+            { train: '29', bay: 'Bay3', path: 'Bay1 → Bay3', arrival: 56, end: 118, cost: 62, priority: 2, status: 'Accepted' },
+            { train: '30', bay: 'Bay2', path: 'Bay1 → Bay2', arrival: 58, end: 100, cost: 42, priority: 2, status: 'Accepted' },
+            { train: '8', bay: 'Bay4', path: 'Bay1 → Bay2 → Bay4', arrival: 14, end: 46, cost: 32, priority: 1, status: 'Accepted' },
+            { train: '12', bay: 'Bay3', path: 'Bay1 → Bay3', arrival: 22, end: 84, cost: 62, priority: 1, status: 'Accepted' },
+            { train: '18', bay: 'Bay2', path: 'Bay1 → Bay2', arrival: 34, end: 76, cost: 42, priority: 1, status: 'Accepted' },
+            { train: '24', bay: 'Bay3', path: 'Bay1 → Bay3', arrival: 46, end: 108, cost: 62, priority: 1, status: 'Accepted' },
+            { train: '26', bay: 'Bay4', path: 'Bay1 → Bay2 → Bay4', arrival: 50, end: 82, cost: 32, priority: 1, status: 'Accepted' },
+            { train: '28', bay: 'Bay5', path: 'Bay1 → Bay3 → Bay5', arrival: 54, end: 116, cost: 62, priority: 1, status: 'Accepted' }
+        ];
+
+        // Rejected trains
+        const rejectedTrains = [
+            { train: '6', bay: 'Bay3', path: 'Bay1 → Bay3', arrival: 10, priority: 2, status: 'Rejected: Safety gap violation with Train 4' },
+            { train: '15', bay: 'Bay5', path: 'Bay1 → Bay3 → Bay5', arrival: 28, priority: 2, status: 'Rejected: Safety gap violation with Train 14' },
+            { train: '22', bay: 'Bay1', path: 'Bay1', arrival: 42, priority: 2, status: 'Rejected: Safety gap violation with Train 20' },
+            { train: '3', bay: 'Bay3', path: 'Bay1 → Bay3', arrival: 4, priority: 1, status: 'Rejected: Safety gap violation with Train 4' },
+            { train: '13', bay: 'Bay3', path: 'Bay1 → Bay3', arrival: 24, priority: 1, status: 'Rejected: Safety gap violation with Train 12' }
+        ];
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            populateScheduleTable();
+            updateStats();
+            initializeTimelineChart();
+            
+            // Add event listeners
+            document.getElementById('runSimulation').addEventListener('click', runSimulation);
+            document.getElementById('resetSimulation').addEventListener('click', resetSimulation);
+        });
+
+        function populateScheduleTable() {
+            const tableBody = document.getElementById('scheduleTable');
+            tableBody.innerHTML = '';
+            
+            // Add accepted trains
+            scheduleData.forEach(train => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${train.train}</td>
+                    <td>${train.bay}</td>
+                    <td>${train.path}</td>
+                    <td>${train.arrival}</td>
+                    <td>${train.end}</td>
+                    <td class="movement-cost">${train.cost}</td>
+                    <td><span class="badge bg-${train.priority === 3 ? 'danger' : train.priority === 2 ? 'warning' : 'info'}">${train.priority}</span></td>
+                    <td><span class="badge bg-success">${train.status}</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Add rejected trains
+            rejectedTrains.forEach(train => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${train.train}</td>
+                    <td>${train.bay}</td>
+                    <td>${train.path}</td>
+                    <td>${train.arrival}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td><span class="badge bg-${train.priority === 3 ? 'danger' : train.priority === 2 ? 'warning' : 'info'}">${train.priority}</span></td>
+                    <td><span class="badge bg-danger">${train.status}</span></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateStats() {
+            const totalTrains = scheduleData.length + rejectedTrains.length;
+            const totalCost = scheduleData.reduce((sum, train) => sum + train.cost, 0);
+            const avgCost = totalCost / scheduleData.length;
+            
+            document.getElementById('totalTrains').textContent = totalTrains;
+            document.getElementById('totalCost').textContent = totalCost;
+            document.getElementById('avgCost').textContent = avgCost.toFixed(1);
+        }
+
+        function initializeTimelineChart() {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            
+            // Prepare data for the timeline
+            const bays = ['Bay1', 'Bay2', 'Bay3', 'Bay4', 'Bay5'];
+            const datasets = [];
+            
+            bays.forEach(bay => {
+                const bayTrains = scheduleData.filter(train => train.bay === bay);
+                const data = [];
+                
+                // Create a dataset for each bay
+                bayTrains.forEach(train => {
+                    data.push({
+                        x: `Train ${train.train}`,
+                        y: [train.arrival, train.end]
+                    });
+                });
+                
+                let backgroundColor;
+                if (bay === 'Bay1' || bay === 'Bay2' || bay === 'Bay3') {
+                    backgroundColor = 'rgba(74, 134, 232, 0.6)';
+                } else if (bay === 'Bay4') {
+                    backgroundColor = 'rgba(106, 168, 79, 0.6)';
+                } else {
+                    backgroundColor = 'rgba(230, 124, 115, 0.6)';
+                }
+                
+                datasets.push({
+                    label: bay,
+                    data: data,
+                    backgroundColor: backgroundColor,
+                    borderColor: backgroundColor.replace('0.6', '1'),
+                    borderWidth: 1
+                });
+            });
+            
+            // Create the chart
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Trains',
+                                color: '#2c3e50',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                color: '#2c3e50'
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Time',
+                                color: '#2c3e50',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#2c3e50'
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#2c3e50',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Arrival: ${context.raw.y[0]}, End: ${context.raw.y[1]}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function runSimulation() {
+            // Simulate the scheduling process with animations
+            const runBtn = document.getElementById('runSimulation');
+            runBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Simulating...';
+            runBtn.disabled = true;
+            
+            // Reset any previous simulation
+            resetSimulation();
+            
+            // Simulate processing time
+            setTimeout(() => {
+                // Show rejected trains
+                const rejectedSection = document.createElement('div');
+                rejectedSection.className = 'card mt-4';
+                rejectedSection.innerHTML = `
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Rejected Trains</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="safety-alert"><i class="fas fa-times-circle me-2"></i>${rejectedTrains.length} trains were rejected due to safety violations</p>
+                        <ul>
+                            ${rejectedTrains.map(train => 
+                                `<li>Train ${train.train} (Priority ${train.priority}): ${train.status}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                `;
+                
+                document.querySelector('.container').appendChild(rejectedSection);
+                
+                runBtn.innerHTML = '<i class="fas fa-check me-2"></i>Simulation Complete';
+                
+                // Add path animations to the depot visualization
+                addPathVisualizations();
+                
+                // Add train movement animations
+                simulateTrainMovements();
+            }, 2000);
+        }
+
+        function resetSimulation() {
+            // Remove rejected trains section if it exists
+            const rejectedSection = document.querySelector('.card .safety-alert')?.closest('.card');
+            if (rejectedSection) {
+                rejectedSection.remove();
+            }
+            
+            // Reset the run button
+            const runBtn = document.getElementById('runSimulation');
+            runBtn.innerHTML = '<i class="fas fa-play me-2"></i>Run Simulation';
+            runBtn.disabled = false;
+            
+            // Clear path visualizations
+            document.querySelectorAll('.path-arrow').forEach(el => el.remove());
+            
+            // Clear train movements
+            document.querySelectorAll('.train-movement').forEach(el => el.remove());
+        }
+
+        function addPathVisualizations() {
+            // Add path arrows for common routes
+            const paths = [
+                { from: 0, to: 2, count: 6 }, // Bay1 to Bay3
+                { from: 0, to: 1, count: 8 }, // Bay1 to Bay2
+                { from: 1, to: 3, count: 4 }, // Bay2 to Bay4
+                { from: 2, to: 4, count: 4 }  // Bay3 to Bay5
+            ];
+            
+            paths.forEach(path => {
+                const fromBay = document.querySelectorAll('.bay')[path.from];
+                const toBay = document.querySelectorAll('.bay')[path.to];
+                
+                if (fromBay && toBay) {
+                    const fromRect = fromBay.getBoundingClientRect();
+                    const toRect = toBay.getBoundingClientRect();
+                    const depotRect = document.querySelector('.depot-visualization').getBoundingClientRect();
+                    
+                    const arrow = document.createElement('div');
+                    arrow.className = 'path-arrow';
+                    arrow.innerHTML = '<i class="fas fa-arrow-right"></i>';
+                    
+                    // Position the arrow between the bays
+                    arrow.style.top = `${(fromRect.top + toRect.top)/2 - depotRect.top + 15}px`;
+                    arrow.style.left = `${(fromRect.left + toRect.right)/2 - depotRect.left}px`;
+                    
+                    document.querySelector('.depot-visualization').appendChild(arrow);
+                }
+            });
+        }
+
+        function simulateTrainMovements() {
+            // Create moving train elements for visualization
+            for (let i = 0; i < 3; i++) {
+                const trainMovement = document.createElement('div');
+                trainMovement.className = 'train-movement';
+                trainMovement.innerHTML = '<i class="fas fa-train"></i>';
+                
+                // Random starting position
+                const startY = 100 + (i * 120);
+                trainMovement.style.top = `${startY}px`;
+                trainMovement.style.left = '50px';
+                
+                // Random speed
+                trainMovement.style.animationDuration = `${3 + i}s`;
+                
+                document.querySelector('.depot-visualization').appendChild(trainMovement);
+            }
+        }
+
+        // Function to fetch data from the optimizer (to be implemented)
+        function fetchScheduleData() {
+            // This function would make an API call to your backend
+            // to get the actual schedule data from the optimizer
+            console.log("Fetching schedule data from optimizer...");
+            // Example implementation:
+            /*
+            fetch('/api/schedule')
+                .then(response => response.json())
+                .then(data => {
+                    // Process the data
+                    scheduleData = data.scheduled;
+                    rejectedTrains = data.rejected;
+                    populateScheduleTable();
+                    updateStats();
+                })
+                .catch(error => {
+                    console.error('Error fetching schedule data:', error);
+                });
+            */
+        }
+    </script>
+</body>
+</html>
