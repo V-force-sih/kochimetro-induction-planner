@@ -2,7 +2,15 @@ import pulp
 import json
 import os
 from typing import List, Dict, Optional
+import numpy as np
 
+# Import ML components (with fallback handling)
+try:
+    from ml_trainer import OptimizationTrainer
+    ML_AVAILABLE = True
+except ImportError:
+    print("Warning: ML components not available. Using default weights.")
+    ML_AVAILABLE = False
 
 class MetroOptimizer:
     def __init__(self, overrides=None):
@@ -14,12 +22,62 @@ class MetroOptimizer:
         self.depot_layout = self.load_depot_layout()
         self.overrides = overrides or []  # Store manual overrides
 
-        # NEW: weights & possible business quota (backwards compatible)
-        self.weight_stabling = 0.01
-        self.weight_mileage_spread = 0.0001
-        # If not None, enforce minimum total branding exposure (sum of branding_priority for service trains)
-        # Set externally if you want a quota. Default None = no quota enforced.
+        # ML components (with fallback to default weights)
+        self.ml_weights = self.load_ml_weights()
+        
+        # Use ML weights if available, otherwise use defaults
+        self.weight_stabling = self.ml_weights.get('stabling_weight', 0.01)
+        self.weight_mileage_spread = self.ml_weights.get('mileage_weight', 0.0001)
+        self.weight_branding = self.ml_weights.get('branding_weight', 1.0)
+        
+        # If not None, enforce minimum total branding exposure
         self.branding_min_total: Optional[float] = None
+
+    def load_ml_weights(self):
+        """Load ML model and get weights for current scenario, with fallback to defaults"""
+        if not ML_AVAILABLE:
+            return self.get_default_weights()
+            
+        try:
+            # Load trained model
+            model_path = os.path.join(os.path.dirname(__file__), 'models', 'optimization_model.joblib')
+            trainer = OptimizationTrainer()
+            
+            if trainer.load_model(model_path):
+                # Extract features from current data
+                features = self.get_current_features()
+                # Predict optimal weights
+                weights = trainer.predict_weights(features)
+                if weights:
+                    print("✓ Using ML-optimized weights")
+                    return weights
+        except Exception as e:
+            print(f"Error loading ML weights: {e}")
+        
+        # Fallback to default weights
+        print("⚠️ Using default weights (ML not available)")
+        return self.get_default_weights()
+    
+    def get_default_weights(self):
+        """Return default weights for when ML is not available"""
+        return {
+            'branding_weight': 1.0,
+            'mileage_weight': 0.0001,
+            'stabling_weight': 0.01
+        }
+    
+    def get_current_features(self):
+        """Extract features from current train data for ML prediction"""
+        fit_trains = [t for t in self.trains if self._is_fit_for_service(t)]
+        
+        return {
+            'required_trains': len(self.trains) // 2,  # Default estimate
+            'available_trains': len(fit_trains),
+            'unfit_trains': len(self.trains) - len(fit_trains),
+            'critical_jobs': sum(t['job_cards']['open_critical'] for t in self.trains),
+            'branding_priority_avg': sum(t['branding_priority'] for t in self.trains) / len(self.trains),
+            'mileage_avg': sum(t['mileage'] for t in self.trains) / len(self.trains)
+        }
 
     def load_data(self) -> List[Dict]:
         """Load train data from JSON file (same path as before)."""
@@ -173,14 +231,14 @@ class MetroOptimizer:
                 self.stabling_cost += 3 * self.ibl_vars[train_id]
 
     def set_objective(self):
-        """Set the optimization objective: keep branding objective and add mileage spread minimization."""
-        # Primary objective: Maximize branding exposure (same as before)
+        """Set the optimization objective using ML-learned weights"""
+        # Primary objective: Maximize branding exposure with ML weight
         branding_obj = pulp.lpSum([
-            self.service_vars[train['id']] * train['branding_priority']
+            self.service_vars[train['id']] * train['branding_priority'] 
             for train in self.trains
-        ])
+        ]) * self.weight_branding
 
-        # NEW: Mileage spread linearization (minimize max - min) — MILP-friendly
+        # Mileage spread minimization with ML weight
         max_mileage = pulp.LpVariable("max_mileage", lowBound=0)
         min_mileage = pulp.LpVariable("min_mileage", lowBound=0)
 
@@ -194,8 +252,12 @@ class MetroOptimizer:
             # max_mileage >= m * service_var
             self.problem += (max_mileage >= self.service_vars[tid] * m)
             # min_mileage <= m + (1 - service_var) * BIG_M
-            # This ensures min_mileage is bounded by the mileage of selected trains only
             self.problem += (min_mileage <= self.service_vars[tid] * m + (1 - self.service_vars[tid]) * big_m)
+
+        mileage_obj = (max_mileage - min_mileage) * self.weight_mileage_spread
+
+        # Stabling cost objective with ML weight
+        stabling_obj = self.stabling_cost * self.weight_stabling
 
         # branding_min_total enforcement if set (optional business quota)
         if self.branding_min_total is not None:
@@ -205,11 +267,8 @@ class MetroOptimizer:
                 "branding_min_total_quota"
             )
 
-        # Combined objective:
-        # maximize branding — small penalty for stabling cost and for mileage spread (max - min)
-        self.problem += branding_obj \
-                        - self.weight_stabling * self.stabling_cost \
-                        - self.weight_mileage_spread * (max_mileage - min_mileage)
+        # Combined objective using ML-learned weights
+        self.problem += branding_obj - mileage_obj - stabling_obj
 
     def _is_fit_for_service(self, train):
         """Check if train meets all fitness constraints (keeps previous logic)"""
@@ -295,6 +354,10 @@ class MetroOptimizer:
 
             if is_override_service and train['job_cards']['open_critical'] > 0:
                 explanation.append("⚠️ FORCED: critical job-cards ignored by override")
+
+            # Add ML weight information to explanations
+            if ML_AVAILABLE and (in_service or in_standby or in_ibl):
+                explanation.append(f"ML weights: B({self.weight_branding:.3f}) M({self.weight_mileage_spread:.5f}) S({self.weight_stabling:.3f})")
 
             explanations[train_id] = explanation
 

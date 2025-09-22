@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kochi Metro - Intelligent Induction Planner</title>
+    <title>Kochi Metro - Intelligent Operations Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            /* Updated to a light-blue & white theme */
             --metro-primary: #0ea5ff;
             --metro-primary-dark: #0a8fe0;
             --metro-secondary: #ffffff;
@@ -44,12 +43,35 @@
         .btn-metro:hover {
             background: var(--metro-primary-dark);
         }
-        .train-card {
-            transition: transform 0.2s;
-            border-radius: 8px;
+        .train-operational-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #4a86e8;
         }
-        .train-card:hover {
-            transform: translateY(-2px);
+        .train-operational-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .health-score-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .maintenance-timeline {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #4a86e8;
+        }
+        .operational-metrics {
+            background: #f0f7ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        .progress {
+            background-color: #e9ecef;
+            border-radius: 3px;
         }
         .service-badge {
             background-color: #e6faff;
@@ -139,9 +161,66 @@
             margin-bottom: 12px;
         }
         .explanation-list { padding-left: 16px; margin-top: 6px; color: #123; }
-        /* small helper for the new branding control */
         .branding-control { display:flex; gap:8px; align-items:center; }
         .branding-control input[type="number"] { max-width: 140px; }
+        .ml-recommendation { 
+            background: #f8f9ff; 
+            border-left: 4px solid var(--metro-primary); 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            border-radius: 4px; 
+        }
+        .ml-confidence { 
+            font-size: 0.85rem; 
+            color: #666; 
+            margin-top: 5px; 
+        }
+        .health-score-gauge {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            margin: 0 auto 15px;
+        }
+        .health-score-gauge circle {
+            fill: none;
+            stroke-width: 10;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .health-score-gauge .gauge-bg {
+            stroke: #e9ecef;
+        }
+        .health-score-gauge .gauge-value {
+            stroke: #4a86e8;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.5s ease;
+        }
+        .health-score-gauge .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .component-health {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .component-health .component {
+            text-align: center;
+            flex: 1;
+        }
+        .component-health .component-name {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .component-health .component-value {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -153,7 +232,7 @@
         <div class="container">
             <a class="navbar-brand" href="#">
                 <i class="fas fa-subway me-2"></i>
-                Kochi Metro - Intelligent Induction Planner
+                Kochi Metro - Intelligent Operations Dashboard
             </a>
         </div>
     </nav>
@@ -183,7 +262,7 @@
                     </div>
                 </div>
 
-                <!-- NEW: Branding quota toggle + number input (non-breaking, small) -->
+                <!-- Branding quota toggle + number input -->
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label class="form-label">Branding Quota (demo)</label>
@@ -201,6 +280,23 @@
                 <button id="runOptimization" class="btn btn-metro btn-lg w-100">
                     <i class="fas fa-bolt me-2"></i>Run Optimization
                 </button>
+            </div>
+        </div>
+
+        <!-- ML Insights Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-brain me-2"></i>ML Insights</h5>
+            </div>
+            <div class="card-body">
+                <div id="mlInsights">
+                    <p class="text-muted">Run optimization to see ML recommendations</p>
+                </div>
+                <div class="mt-3">
+                    <button id="retrainModel" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-robot me-1"></i>Retrain ML Model
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -289,9 +385,9 @@
                 <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Optimization Results</h5>
             </div>
             <div class="card-body">
-                <!-- Conflicts container (new) -->
+                <!-- Conflicts container -->
                 <div id="conflictsContainer" style="display:none;" class="conflict-card">
-                    <h6 class="mb-2">⚠️ Warnings / Conflicts</h6>
+                    <h6 class="mb-2">⚠ Warnings / Conflicts</h6>
                     <ul id="conflictList" class="mb-0"></ul>
                 </div>
 
@@ -375,7 +471,7 @@
         </div>
     </div>
 
-    <!-- bootstrap -->
+    <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -388,23 +484,131 @@
                 : 'https://your-deployed-api-url.com';
         }
 
-        // safer showToast (same behavior)
+        // Health Score Calculation System
+        function calculateHealthScore(train) {
+            let score = 100; // Start with perfect score
+            
+            // Deduct points based on various factors
+            if (train.job_cards.open_critical > 0) score -= 30;
+            if (train.job_cards.open_non_critical > 0) score -= 10;
+            
+            // Mileage-based deductions (higher mileage = more wear)
+            const mileageDeduction = Math.min(15, (train.mileage - 50000) / 10000);
+            score -= mileageDeduction;
+            
+            // Fitness certificate deductions
+            if (!train.fitness_certificates.rolling_stock) score -= 25;
+            if (!train.fitness_certificates.signalling) score -= 25;
+            if (!train.fitness_certificates.telecom) score -= 25;
+            
+            // Cleaning requirement deduction
+            if (train.requires_cleaning) score -= 5;
+            
+            return Math.max(0, Math.round(score)); // Ensure score is between 0-100
+        }
+
+        function getHealthStatus(score) {
+            if (score >= 90) return { label: 'Excellent', class: 'success' };
+            if (score >= 75) return { label: 'Good', class: 'info' };
+            if (score >= 60) return { label: 'Fair', class: 'warning' };
+            return { label: 'Poor', class: 'danger' };
+        }
+
+        // Predictive Maintenance Calculations
+        function calculateMaintenanceMetrics(train) {
+            const baseDate = new Date('2023-10-01'); // Current date
+            const lastMaintenance = new Date(train.last_maintenance_date);
+            
+            // Calculate days since last maintenance
+            const daysSinceMaintenance = Math.floor((baseDate - lastMaintenance) / (1000 * 60 * 60 * 24));
+            
+            // Predict next service (every 180 days)
+            const nextServiceDue = new Date(lastMaintenance);
+            nextServiceDue.setDate(nextServiceDue.getDate() + 180);
+            
+            // Calculate component wear (simulated)
+            const brakePadWear = Math.min(100, Math.round((train.mileage % 50000) / 500));
+            const hvacEfficiency = Math.max(40, 100 - Math.round((train.mileage % 100000) / 2000));
+            
+            // Calculate monthly average mileage
+            const serviceDate = new Date(train.last_maintenance_date || '2023-01-01');
+            const monthsInService = Math.max(1, (baseDate - serviceDate) / (1000 * 60 * 60 * 24 * 30));
+            const avgMonthlyMileage = Math.round(train.mileage / monthsInService);
+            
+            // Calculate branding hours (simulated based on usage pattern)
+            const brandingHours = Math.round(train.branding_priority * 12.5 + Math.random() * 20);
+            
+            return {
+                healthScore: calculateHealthScore(train),
+                nextServiceDue: nextServiceDue.toISOString().split('T')[0],
+                brakePadWear: brakePadWear,
+                hvacEfficiency: hvacEfficiency,
+                avgMonthlyMileage: avgMonthlyMileage,
+                brandingHours: brandingHours,
+                stablingEfficiency: calculateStablingEfficiency(train.current_stable_position)
+            };
+        }
+
+        function calculateStablingEfficiency(position) {
+            // Analyze position for optimal stabling
+            if (position.includes('A') || position.includes('B') || position.includes('C')) {
+                return { label: 'Optimal', score: 90 };
+            } else if (position.includes('STB') || position.includes('IBL')) {
+                return { label: 'Service Ready', score: 75 };
+            } else {
+                return { label: 'Remote', score: 60 };
+            }
+        }
+
+        function getFitnessBadgeColor(train) {
+            const certs = train.fitness_certificates || {};
+            return certs.rolling_stock && certs.signalling && certs.telecom ? 'success' : 'danger';
+        }
+
+        function getFitnessStatusText(train) {
+            const certs = train.fitness_certificates || {};
+            return certs.rolling_stock && certs.signalling && certs.telecom ? 'Valid' : 'Invalid';
+        }
+
+        // Create health score gauge SVG
+        function createHealthScoreGauge(score) {
+            const radius = 45;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (score / 100) * circumference;
+            
+            return `
+                <svg class="health-score-gauge" viewBox="0 0 100 100">
+                    <circle class="gauge-bg" cx="50" cy="50" r="${radius}" stroke-width="10"></circle>
+                    <circle class="gauge-value" cx="50" cy="50" r="${radius}" stroke-width="10" 
+                            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"></circle>
+                    <text class="gauge-text" x="50" y="50" text-anchor="middle" dy=".3em">${score}</text>
+                </svg>
+            `;
+        }
+
+        // Show toast notifications
         function showToast(message, type = 'info') {
             const toastContainer = document.querySelector('.toast-container');
             const toast = document.createElement('div');
             toast.className = `toast align-items-center text-white bg-${type} border-0`;
-            toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
             toastContainer.appendChild(toast);
             const bsToast = new bootstrap.Toast(toast, { delay: 3500 });
             bsToast.show();
             toast.addEventListener('hidden.bs.toast', () => toast.remove());
         }
 
-        // safer logApiCall: handles missing body / non-JSON
+        // Log API calls for debugging
         function safeParseBody(body) {
             if (!body) return null;
             try { return JSON.parse(body); } catch (e) { return body; }
         }
+        
         function logApiCall(url, options, response, data) {
             try {
                 const requestLog = {
@@ -470,7 +674,7 @@
             }
         }
 
-        // Load overrides (unchanged behavior) — but remove button will call delete path
+        // Load overrides
         async function loadOverrides() {
             try {
                 const API_BASE = getApiBase();
@@ -502,7 +706,7 @@
                         overridesContainer.appendChild(overrideElement);
                     });
 
-                    // attach listeners (uses updated removeOverride below)
+                    // Attach listeners for remove buttons
                     document.querySelectorAll('.remove-override').forEach(button => {
                         button.addEventListener('click', function() {
                             const trainId = this.getAttribute('data-train-id');
@@ -522,7 +726,7 @@
             }
         }
 
-        // Set override (same endpoint)
+        // Set override
         async function setOverride() {
             const trainId = document.getElementById('overrideTrainId').value.trim();
             const action = document.getElementById('overrideAction').value;
@@ -567,7 +771,7 @@
             }
         }
 
-        // Remove override: updated to call DELETE /override/{train_id} (matches updated api.py)
+        // Remove override
         async function removeOverride(trainId) {
             try {
                 const API_BASE = getApiBase();
@@ -608,7 +812,7 @@
             return "Unknown";
         }
 
-        // Movement cost function (keeps existing matrix)
+        // Movement cost function
         function getMovementCost(fromZone, toZone) {
             const costMatrix = {
                 "Service": {"Service": 0, "Standby": 2, "IBL": 3, "Unknown": 3},
@@ -619,7 +823,7 @@
             return costMatrix[fromZone] ? (costMatrix[fromZone][toZone] || 3) : 3;
         }
 
-        // Calculate stabling info (unchanged)
+        // Calculate stabling info
         function calculateStablingInfo(solution) {
             let movementCost = 0;
             let trainsMoved = 0;
@@ -688,21 +892,418 @@
             return { movementCost, trainsMoved, movementDetails };
         }
 
-        // Run optimization
-        document.getElementById('runOptimization').addEventListener('click', runOptimization);
-        document.getElementById('setOverride').addEventListener('click', setOverride);
-        document.getElementById('loadOverrides').addEventListener('click', loadOverrides);
-        document.getElementById('showDebug').addEventListener('click', function() {
-            document.getElementById('debugPanel').style.display = 'block';
-            this.style.display = 'none';
-            testConnection();
-        });
-        document.getElementById('toggleDebug').addEventListener('click', function() {
-            document.getElementById('debugPanel').style.display = 'none';
-            document.getElementById('showDebug').style.display = 'inline-block';
-        });
-        document.getElementById('testConnection').addEventListener('click', testConnection);
+        // ML Insights functionality
+        function updateMLInsights(solution, explanations = {}) {
+            const mlInsightsContainer = document.getElementById('mlInsights');
+            
+            if (!solution || Object.keys(solution).length === 0) {
+                mlInsightsContainer.innerHTML = '<p class="text-muted">Run optimization to see ML recommendations</p>';
+                return;
+            }
 
+            // Generate ML insights based on the solution
+            let insightsHTML = '';
+            
+            // Analyze service trains for branding optimization
+            const highBrandingTrains = solution.service.filter(train => train.branding_priority >= 8);
+            if (highBrandingTrains.length > 0) {
+                insightsHTML += `
+                <div class="ml-recommendation">
+                    <strong>📊 Branding Optimization</strong>
+                    <p>${highBrandingTrains.length} high-branding trains in service (priority ≥8)</p>
+                    <div class="ml-confidence">Maximizes advertising revenue potential</div>
+                </div>
+                `;
+            }
+
+            // Analyze maintenance patterns
+            const highMileageTrains = solution.service.filter(train => train.mileage > 80000);
+            if (highMileageTrains.length > 0) {
+                insightsHTML += `
+                <div class="ml-recommendation">
+                    <strong>🔧 Maintenance Planning</strong>
+                    <p>${highMileageTrains.length} high-mileage trains in service (>80,000 km)</p>
+                    <div class="ml-confidence">Consider scheduling maintenance in next cycle</div>
+                </div>
+                `;
+            }
+
+            // Analyze IBL assignments
+            const criticalIBLTrains = solution.ibl.filter(train => train.job_cards.open_critical >= 3);
+            if (criticalIBLTrains.length > 0) {
+                insightsHTML += `
+                <div class="ml-recommendation">
+                    <strong>⚠ Critical Maintenance</strong>
+                    <p>${criticalIBLTrains.length} trains in IBL with 3+ critical job cards</p>
+                    <div class="ml-confidence">Prioritize these for immediate attention</div>
+                </div>
+                `;
+            }
+
+            // Resource utilization insights
+            const utilizationRate = Math.round((solution.service.length / parseInt(document.getElementById('trainsRequired').value || "20")) * 100);
+            insightsHTML += `
+            <div class="ml-recommendation">
+                <strong>📈 Resource Utilization</strong>
+                <p>Service utilization: ${utilizationRate}% (${solution.service.length}/${document.getElementById('trainsRequired').value || "20"} trains)</p>
+                <div class="ml-confidence">${utilizationRate > 90 ? 'Optimal' : utilizationRate > 70 ? 'Good' : 'Could be improved'}</div>
+            </div>
+            `;
+
+            mlInsightsContainer.innerHTML = insightsHTML || '<p class="text-muted">No specific ML insights for this optimization run</p>';
+        }
+
+        // Retrain ML Model function
+        async function retrainMLModel() {
+            const btn = document.getElementById('retrainModel');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Retraining...';
+            btn.disabled = true;
+
+            try {
+                const API_BASE = getApiBase();
+                const response = await fetch(`${API_BASE}/retrain-model`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showToast('ML model retrained successfully', 'success');
+                } else {
+                    showToast('Model retraining failed: ' + (data.message || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                console.error('Error retraining model:', error);
+                showToast('Model retraining endpoint not available', 'info');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-robot me-1"></i>Retrain ML Model';
+                btn.disabled = false;
+            }
+        }
+
+        // Display intelligent train cards
+        function displayIntelligentTrainCards(solution, explanations = {}, conflicts = null) {
+            // Update counts
+            document.getElementById('serviceCount').textContent = solution.service.length;
+            document.getElementById('standbyCount').textContent = solution.standby.length;
+            document.getElementById('iblCount').textContent = solution.ibl.length;
+
+            // Stabling info
+            const stablingInfo = calculateStablingInfo(solution);
+            document.getElementById('totalMovementCost').textContent = stablingInfo.movementCost;
+            document.getElementById('trainsMoved').textContent = stablingInfo.trainsMoved;
+
+            // Conflicts - FIXED: Handle both conflict_alert (old) and conflict (new)
+            const conflictsContainer = document.getElementById('conflictsContainer');
+            const conflictList = document.getElementById('conflictList');
+            conflictList.innerHTML = '';
+            
+            // Handle conflicts - check both possible field names
+            let conflictMessages = [];
+            if (conflicts) {
+                if (Array.isArray(conflicts)) {
+                    conflictMessages = conflicts;
+                } else if (typeof conflicts === 'string') {
+                    conflictMessages = [conflicts];
+                }
+            }
+            
+            if (conflictMessages.length > 0) {
+                conflictMessages.forEach(msg => {
+                    const li = document.createElement('li');
+                    li.textContent = msg;
+                    conflictList.appendChild(li);
+                });
+                conflictsContainer.style.display = 'block';
+            } else {
+                conflictsContainer.style.display = 'none';
+            }
+
+            // Render service trains with intelligent cards
+            const serviceContainer = document.getElementById('serviceTrains');
+            serviceContainer.innerHTML = solution.service.map(train => {
+                const metrics = calculateMaintenanceMetrics(train);
+                const healthStatus = getHealthStatus(metrics.healthScore);
+                const stablingInfo = calculateStablingEfficiency(train.current_stable_position);
+                const originalTrain = originalTrainData.find(t => t.id === train.id);
+                const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
+                const cost = getMovementCost(fromZone, "Service");
+                let movementClass = "no-movement";
+                if (cost === 2) movementClass = "low-movement";
+                else if (cost >= 3) movementClass = "high-movement";
+
+                // explanation HTML (if present)
+                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
+                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
+
+                return `
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card train-operational-card">
+                        <div class="card-header bg-transparent border-bottom-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Train #${train.id.replace('T', '')}</h5>
+                                <span class="badge bg-${healthStatus.class}">${metrics.healthScore}</span>
+                            </div>
+                            <small class="text-muted">Health Score • ${healthStatus.label}</small>
+                        </div>
+                        <div class="card-body">
+                            <!-- Health & Service Status -->
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Service</small>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success me-2">Active</span>
+                                        <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Certification</small>
+                                    <div>
+                                        <span class="badge bg-${getFitnessBadgeColor(train)}">${getFitnessStatusText(train)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Main Health Score -->
+                            <div class="text-center mb-3">
+                                ${createHealthScoreGauge(metrics.healthScore)}
+                                <small class="text-muted">Overall Health Score</small>
+                            </div>
+                            
+                            <!-- Maintenance Timeline -->
+                            <div class="maintenance-timeline mb-3">
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>Cert. Expiry:<br><strong>2025-11-24</strong></span>
+                                    <span>Next Service:<br><strong>${metrics.nextServiceDue}</strong></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Component Health -->
+                            <div class="component-health">
+                                <div class="component">
+                                    <div class="component-name">Brake Wear</div>
+                                    <div class="component-value">${metrics.brakePadWear}%</div>
+                                    <div class="progress" style="height: 4px; width: 40px; margin: 0 auto;">
+                                        <div class="progress-bar bg-warning" style="width: ${metrics.brakePadWear}%"></div>
+                                    </div>
+                                </div>
+                                <div class="component">
+                                    <div class="component-name">HVAC</div>
+                                    <div class="component-value">${metrics.hvacEfficiency}%</div>
+                                    <div class="progress" style="height: 4px; width: 40px; margin: 0 auto;">
+                                        <div class="progress-bar bg-info" style="width: ${metrics.hvacEfficiency}%"></div>
+                                    </div>
+                                </div>
+                                <div class="component">
+                                    <div class="component-name">Stabling</div>
+                                    <div class="component-value">${stablingInfo.score}</div>
+                                    <div class="progress" style="height: 4px; width: 40px; margin: 0 auto;">
+                                        <div class="progress-bar bg-primary" style="width: ${stablingInfo.score}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Operational Metrics -->
+                            <div class="operational-metrics">
+                                <div class="row small">
+                                    <div class="col-6">
+                                        <span class="text-muted">Total Mileage:</span><br>
+                                        <strong>${train.mileage.toLocaleString()} km</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted">Avg. Monthly:</span><br>
+                                        <strong>${metrics.avgMonthlyMileage.toLocaleString()} km</strong>
+                                    </div>
+                                </div>
+                                <div class="row small mt-2">
+                                    <div class="col-6">
+                                        <span class="text-muted">Branding Hours:</span><br>
+                                        <strong>${metrics.brandingHours} hrs</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted">Stabling:</span><br>
+                                        <strong>${train.current_stable_position}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            ${explHtml}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // Render standby trains
+            const standbyContainer = document.getElementById('standbyTrains');
+            standbyContainer.innerHTML = solution.standby.map(train => {
+                const metrics = calculateMaintenanceMetrics(train);
+                const healthStatus = getHealthStatus(metrics.healthScore);
+                const originalTrain = originalTrainData.find(t => t.id === train.id);
+                const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
+                const cost = getMovementCost(fromZone, "Standby");
+                let movementClass = "no-movement";
+                if (cost === 2) movementClass = "low-movement";
+                else if (cost >= 3) movementClass = "high-movement";
+
+                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
+                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
+
+                return `
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card train-operational-card">
+                        <div class="card-header bg-transparent border-bottom-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Train #${train.id.replace('T', '')}</h5>
+                                <span class="badge bg-${healthStatus.class}">${metrics.healthScore}</span>
+                            </div>
+                            <small class="text-muted">Health Score • ${healthStatus.label}</small>
+                        </div>
+                        <div class="card-body">
+                            <!-- Health & Service Status -->
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Status</small>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-warning me-2">Standby</span>
+                                        <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Certification</small>
+                                    <div>
+                                        <span class="badge bg-${getFitnessBadgeColor(train)}">${getFitnessStatusText(train)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Main Health Score -->
+                            <div class="text-center mb-3">
+                                ${createHealthScoreGauge(metrics.healthScore)}
+                                <small class="text-muted">Overall Health Score</small>
+                            </div>
+                            
+                            <!-- Operational Metrics -->
+                            <div class="operational-metrics">
+                                <div class="row small">
+                                    <div class="col-6">
+                                        <span class="text-muted">Total Mileage:</span><br>
+                                        <strong>${train.mileage.toLocaleString()} km</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted">Cleaning:</span><br>
+                                        <strong>${train.requires_cleaning ? 'Required' : 'Not Required'}</strong>
+                                    </div>
+                                </div>
+                                <div class="row small mt-2">
+                                    <div class="col-6">
+                                        <span class="text-muted">Job Cards:</span><br>
+                                        <strong>${train.job_cards.open_critical} critical</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted">Stabling:</span><br>
+                                        <strong>${train.current_stable_position}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            ${explHtml}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // Render IBL trains
+            const iblContainer = document.getElementById('iblTrains');
+            iblContainer.innerHTML = solution.ibl.map(train => {
+                const metrics = calculateMaintenanceMetrics(train);
+                const healthStatus = getHealthStatus(metrics.healthScore);
+                const originalTrain = originalTrainData.find(t => t.id === train.id);
+                const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
+                const cost = getMovementCost(fromZone, "IBL");
+                let movementClass = "no-movement";
+                if (cost === 2) movementClass = "low-movement";
+                else if (cost >= 3) movementClass = "high-movement";
+
+                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
+                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
+
+                return `
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card train-operational-card">
+                        <div class="card-header bg-transparent border-bottom-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Train #${train.id.replace('T', '')}</h5>
+                                <span class="badge bg-${healthStatus.class}">${metrics.healthScore}</span>
+                            </div>
+                            <small class="text-muted">Health Score • ${healthStatus.label}</small>
+                        </div>
+                        <div class="card-body">
+                            <!-- Health & Service Status -->
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Status</small>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-danger me-2">IBL</span>
+                                        <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Certification</small>
+                                    <div>
+                                        <span class="badge bg-${getFitnessBadgeColor(train)}">${getFitnessStatusText(train)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Main Health Score -->
+                            <div class="text-center mb-3">
+                                ${createHealthScoreGauge(metrics.healthScore)}
+                                <small class="text-muted">Overall Health Score</small>
+                            </div>
+                            
+                            <!-- Critical Issues -->
+                            <div class="alert alert-warning small mb-3">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <strong>${train.job_cards.open_critical} Critical Job Cards</strong>
+                            </div>
+                            
+                            <!-- Operational Metrics -->
+                            <div class="operational-metrics">
+                                <div class="row small">
+                                    <div class="col-6">
+                                        <span class="text-muted">Total Mileage:</span><br>
+                                        <strong>${train.mileage.toLocaleString()} km</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted">Non-Critical:</span><br>
+                                        <strong>${train.job_cards.open_non_critical} open</strong>
+                                    </div>
+                                </div>
+                                <div class="row small mt-2">
+                                    <div class="col-6">
+                                        <span class="text-muted">Last Service:</span><br>
+                                        <strong>${train.last_maintenance_date}</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted">Stabling:</span><br>
+                                        <strong>${train.current_stable_position}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            ${explHtml}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            // Show results section
+            document.getElementById('optimizationResults').style.display = 'block';
+        }
+
+        // Run optimization - FIXED: Handle both conflict_alert and conflict fields
         async function runOptimization() {
             const btn = document.getElementById('runOptimization');
             const trainsRequired = parseInt(document.getElementById('trainsRequired').value || "0", 10);
@@ -750,16 +1351,20 @@
                 const data = await response.json();
                 logApiCall(`${API_BASE}/optimize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody }, response, data);
 
-                if (data.status === 'success') {
-                    // New: support explanations and conflict_alert
+                // FIXED: Handle both success status formats
+                if (data.status === 'success' || data.solution) {
+                    // Support both conflict_alert (old) and conflict (new) field names
                     const explanations = data.explanations || {};
-                    let conflicts = data.conflict_alert || null;
+                    let conflicts = data.conflict_alert || data.conflict || null;
                     if (typeof conflicts === 'string') conflicts = [conflicts];
-                    displayResults(data.solution, explanations, conflicts);
+                    
+                    displayIntelligentTrainCards(data.solution, explanations, conflicts);
+                    // Update ML insights
+                    updateMLInsights(data.solution, explanations);
                     showToast('Optimization completed successfully', 'success');
                 } else {
-                    // If API returns error, show message (unchanged behavior)
-                    showToast('Error: ' + data.message, 'danger');
+                    // If API returns error, show message
+                    showToast('Error: ' + (data.message || 'Unknown error'), 'danger');
                 }
             } catch (error) {
                 console.error('Full error details:', error);
@@ -770,144 +1375,23 @@
             }
         }
 
-        // displayResults now accepts optional explanations and conflicts (non-breaking)
-        function displayResults(solution, explanations = {}, conflicts = null) {
-            // Update counts
-            document.getElementById('serviceCount').textContent = solution.service.length;
-            document.getElementById('standbyCount').textContent = solution.standby.length;
-            document.getElementById('iblCount').textContent = solution.ibl.length;
+        // Event listeners
+        document.getElementById('runOptimization').addEventListener('click', runOptimization);
+        document.getElementById('setOverride').addEventListener('click', setOverride);
+        document.getElementById('loadOverrides').addEventListener('click', loadOverrides);
+        document.getElementById('showDebug').addEventListener('click', function() {
+            document.getElementById('debugPanel').style.display = 'block';
+            this.style.display = 'none';
+            testConnection();
+        });
+        document.getElementById('toggleDebug').addEventListener('click', function() {
+            document.getElementById('debugPanel').style.display = 'none';
+            document.getElementById('showDebug').style.display = 'inline-block';
+        });
+        document.getElementById('testConnection').addEventListener('click', testConnection);
+        document.getElementById('retrainModel').addEventListener('click', retrainMLModel);
 
-            // Stabling info
-            const stablingInfo = calculateStablingInfo(solution);
-            document.getElementById('totalMovementCost').textContent = stablingInfo.movementCost;
-            document.getElementById('trainsMoved').textContent = stablingInfo.trainsMoved;
-
-            // Conflicts (new)
-            const conflictsContainer = document.getElementById('conflictsContainer');
-            const conflictList = document.getElementById('conflictList');
-            conflictList.innerHTML = '';
-            if (conflicts && Array.isArray(conflicts) && conflicts.length > 0) {
-                conflicts.forEach(msg => {
-                    const li = document.createElement('li');
-                    li.textContent = msg;
-                    conflictList.appendChild(li);
-                });
-                conflictsContainer.style.display = 'block';
-            } else {
-                conflictsContainer.style.display = 'none';
-            }
-
-            // Render trains (keeps original card layout, adds an explanation toggle)
-            const serviceContainer = document.getElementById('serviceTrains');
-            serviceContainer.innerHTML = solution.service.map(train => {
-                const originalTrain = originalTrainData.find(t => t.id === train.id);
-                const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
-                const cost = getMovementCost(fromZone, "Service");
-                let movementClass = "no-movement";
-                if (cost === 2) movementClass = "low-movement";
-                else if (cost >= 3) movementClass = "high-movement";
-
-                // explanation HTML (if present)
-                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
-                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
-
-                return `
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card train-card">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <span class="service-badge">${train.id}</span>
-                                <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
-                            </h5>
-                            <p class="card-text">
-                                <strong>Branding Priority:</strong> ${train.branding_priority}<br>
-                                <strong>Mileage:</strong> ${train.mileage.toLocaleString()} km<br>
-                                <strong>Current Position:</strong> ${originalTrain ? originalTrain.current_stable_position : 'N/A'}<br>
-                                <strong>Fitness:</strong> ${getFitnessStatus(train)}
-                            </p>
-                            ${explHtml}
-                        </div>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            const standbyContainer = document.getElementById('standbyTrains');
-            standbyContainer.innerHTML = solution.standby.map(train => {
-                const originalTrain = originalTrainData.find(t => t.id === train.id);
-                const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
-                const cost = getMovementCost(fromZone, "Standby");
-                let movementClass = "no-movement";
-                if (cost === 2) movementClass = "low-movement";
-                else if (cost >= 3) movementClass = "high-movement";
-
-                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
-                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
-
-                return `
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card train-card">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <span class="standby-badge">${train.id}</span>
-                                <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
-                            </h5>
-                            <p class="card-text">
-                                <strong>Cleaning:</strong> ${train.requires_cleaning ? 'Yes' : 'No'}<br>
-                                <strong>Current Position:</strong> ${originalTrain ? originalTrain.current_stable_position : 'N/A'}<br>
-                                <strong>Fitness:</strong> ${getFitnessStatus(train)}
-                            </p>
-                            ${explHtml}
-                        </div>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            const iblContainer = document.getElementById('iblTrains');
-            iblContainer.innerHTML = solution.ibl.map(train => {
-                const originalTrain = originalTrainData.find(t => t.id === train.id);
-                const fromZone = originalTrain ? getZoneFromPosition(originalTrain.current_stable_position) : "Unknown";
-                const cost = getMovementCost(fromZone, "IBL");
-                let movementClass = "no-movement";
-                if (cost === 2) movementClass = "low-movement";
-                else if (cost >= 3) movementClass = "high-movement";
-
-                const expl = Array.isArray(explanations[train.id]) ? explanations[train.id] : (explanations[train.id] ? [explanations[train.id]] : []);
-                const explHtml = expl.length ? `<details><summary>Explanation</summary><ul class="explanation-list">${expl.map(e => `<li>${e}</li>`).join('')}</ul></details>` : '';
-
-                return `
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card train-card">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <span class="ibl-badge">${train.id}</span>
-                                <span class="movement-indicator ${movementClass}" title="Movement cost: ${cost}"></span>
-                            </h5>
-                            <p class="card-text">
-                                <strong>Critical Jobs:</strong> ${train.job_cards.open_critical}<br>
-                                <strong>Current Position:</strong> ${originalTrain ? originalTrain.current_stable_position : 'N/A'}<br>
-                                <strong>Fitness:</strong> ${getFitnessStatus(train)}
-                            </p>
-                            ${explHtml}
-                        </div>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            // Show results section
-            document.getElementById('optimizationResults').style.display = 'block';
-        }
-
-        function getFitnessStatus(train) {
-            const certs = train.fitness_certificates || {};
-            return certs.rolling_stock && certs.signalling && certs.telecom
-                ? '<span class="badge bg-success">Valid</span>'
-                : '<span class="badge bg-danger">Invalid</span>';
-        }
-
-        // Init
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             loadTrainData();
         });
