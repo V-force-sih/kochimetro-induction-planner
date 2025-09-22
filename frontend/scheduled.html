@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Network Map - Bay 1-5 Transit System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            padding: 20px;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .toggle-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 0 10px;
+        }
+
+        .toggle-btn:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .toggle-btn:active {
+            transform: translateY(0);
+        }
+
+        .train-network {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+            margin-bottom: 24px;
+            display: none; /* Initially hidden */
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .map-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            background-color: #f1f5f9;
+            margin-bottom: 24px;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .legend-section h3 {
+            margin-bottom: 12px;
+            color: #374151;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .color-swatch {
+            width: 24px;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #e5e7eb;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-list {
+            list-style-type: none;
+        }
+
+        .info-list li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .info-list li:before {
+            content: "•";
+            color: #3b82f6;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        .table-container {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card p {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .subtext {
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .blue-card {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .green-card {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .orange-card {
+            background-color: #ffedd5;
+            color: #9a3412;
+        }
+
+        .purple-card {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .station {
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+
+        .station-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: white;
+            border: 4px solid #1f2937;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .station-start .station-circle {
+            border-color: #dc2626;
+        }
+
+        .station-inner {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #1f2937;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .station-start .station-inner {
+            background-color: #dc2626;
+        }
+
+        .station-center {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .station-label {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 700;
+            font-size: 16px;
+            color: #1f2937;
+            white-space: nowrap;
+            text-shadow: 0 0 3px white, 0 0 3px white, 0 0 3px white;
+        }
+
+        .station-cost {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #059669;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 11px;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .track {
+            position: absolute;
+            height: 10px;
+            border-radius: 5px;
+            transform-origin: 0 0;
+        }
+
+        .track-label {
+            position: absolute;
+            background-color: white;
+            border: 3px solid;
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 14px;
+            font-weight: 700;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Schedule Results Styles */
+        .schedule-results {
+            display: none;
+            margin-top: 24px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .schedule-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .schedule-card {
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .schedule-card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .schedule-card p {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .schedule-table th {
+            background-color: #3b82f6;
+            color: white;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .schedule-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .schedule-table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        .status-optimal {
+            background-color: #d1fae5;
+            color: #065f46;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .status-alternative {
+            background-color: #fef3c7;
+            color: #92400e;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .status-failed {
+            background-color: #fee2e2;
+            color: #dc2626;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .priority-high {
+            background-color: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 50%;
+            font-weight: 600;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .priority-medium {
+            background-color: #f59e0b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 50%;
+            font-weight: 600;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .priority-low {
+            background-color: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 50%;
+            font-weight: 600;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .legend {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .map-container {
+                height: 400px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .schedule-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .schedule-table {
+                font-size: 12px;
+            }
+            
+            .schedule-table th, .schedule-table td {
+                padding: 8px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Train Network Management System</h1>
+            <p>Bay 1-5 Transit System with Fuel Costs</p>
+        </div>
+        
+        <div class="toggle-section">
+            <button class="toggle-btn" id="toggleBtn">Show Train Network Map</button>
+            <button class="toggle-btn" id="optimizeBtn" style="display: none;">Show Optimized Schedule</button>
+        </div>
+        
+        <div class="train-network" id="trainNetwork">
+            <h2>Train Network Map</h2>
+            
+            <div class="map-container" id="network-map">
+                <!-- SVG content will be generated by JavaScript -->
+            </div>
+            
+            <div class="legend">
+                <div class="legend-section">
+                    <h3>Track Types</h3>
+                    <div class="legend-item">
+                        <div class="color-swatch" style="background-color: #15803D"></div>
+                        <span>T1 Tracks (Shorter Routes)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-swatch" style="background-color: #DC2626"></div>
+                        <span>T2 Tracks (Longer Routes)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-swatch" style="background-color: #7C2D12"></div>
+                        <span>Bay 2-4 T1 / Bay 3-5 T1</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-swatch" style="background-color: #EA580C"></div>
+                        <span>Bay 2-4 T2 / Bay 3-5 T2</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-swatch" style="background-color: #1D4ED8"></div>
+                        <span>Start to Bay 1</span>
+                    </div>
+                </div>
+                
+                <div class="legend-section">
+                    <h3>Station Costs</h3>
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 14px;">
+                        <span>Starting Point:</span>
+                        <span class="badge">10L</span>
+                        <span>Bay 1:</span>
+                        <span class="badge">10L</span>
+                        <span>Bay 2:</span>
+                        <span class="badge">20L</span>
+                        <span>Bay 3:</span>
+                        <span class="badge">30L</span>
+                        <span>Bay 4:</span>
+                        <span class="badge">5L</span>
+                        <span>Bay 5:</span>
+                        <span class="badge">15L</span>
+                    </div>
+                </div>
+                
+                <div class="legend-section">
+                    <h3>Network Info</h3>
+                    <ul class="info-list">
+                        <li>Two main branches from Bay 1</li>
+                        <li>Multiple route options between stations</li>
+                        <li>Fuel costs shown per track segment</li>
+                        <li>Distance in kilometers (km)</li>
+                        <li>Fuel consumption in liters (L)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="schedule-results" id="scheduleResults">
+                <div class="schedule-header">
+                    <h2>Optimized Train Schedule</h2>
+                    <span id="scheduleTimestamp"></span>
+                </div>
+                
+                <div class="schedule-summary">
+                    <div class="schedule-card">
+                        <h3>Scheduled Trains</h3>
+                        <p id="scheduledCount">29</p>
+                    </div>
+                    <div class="schedule-card">
+                        <h3>Optimal Paths</h3>
+                        <p id="optimalCount">26</p>
+                    </div>
+                    <div class="schedule-card">
+                        <h3>Alternative Paths</h3>
+                        <p id="alternativeCount">2</p>
+                    </div>
+                    <div class="schedule-card">
+                        <h3>Failed Schedules</h3>
+                        <p id="failedCount">1</p>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <h3>Detailed Schedule</h3>
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>Train No</th>
+                                <th>Bay</th>
+                                <th>Track</th>
+                                <th>Arrival</th>
+                                <th>End Time</th>
+                                <th>Cost</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedule-table-body">
+                            <!-- Schedule rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <h2>All Possible Paths</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Route</th>
+                            <th>Track Combination</th>
+                            <th>Total Distance</th>
+                            <th>Total Fuel Cost</th>
+                            <th>Segments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paths-table">
+                        <!-- Table rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card blue-card">
+                    <h4>Total Paths</h4>
+                    <p>8</p>
+                </div>
+                <div class="stat-card green-card">
+                    <h4>Most Efficient</h4>
+                    <p>35L (14km)</p>
+                    <span class="subtext">Start → Bay 1 → Bay 2 → Bay 4</span>
+                </div>
+                <div class="stat-card orange-card">
+                    <h4>Least Efficient</h4>
+                    <p>70L (28km)</p>
+                    <span class="subtext">Start → Bay 1 → Bay 3 → Bay 5</span>
+                </div>
+                <div class="stat-card purple-card">
+                    <h4>Average Cost</h4>
+                    <p>52.5L</p>
+                    <span class="subtext">Across all paths</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Station data with positions
+        const stations = [
+            { id: "start", name: "Starting Point", x: 120, y: 300, fuelCost: "10L" },
+            { id: "bay1", name: "Bay 1", x: 350, y: 300, fuelCost: "10L" },
+            { id: "bay2", name: "Bay 2", x: 550, y: 180, fuelCost: "20L" },
+            { id: "bay3", name: "Bay 3", x: 550, y: 420, fuelCost: "30L" },
+            { id: "bay4", name: "Bay 4", x: 750, y: 120, fuelCost: "5L" },
+            { id: "bay5", name: "Bay 5", x: 750, y: 480, fuelCost: "15L" },
+        ];
+
+        // Track data with paths and costs
+        const tracks = [
+            {
+                id: "start-bay1",
+                path: { start: { x: 120, y: 300 }, end: { x: 350, y: 300 }, curve: 0 },
+                label: "10L (4km)",
+                color: "#1D4ED8",
+                labelPos: { x: 235, y: 280 }
+            },
+            {
+                id: "bay1-bay2-t1",
+                path: { start: { x: 350, y: 300 }, end: { x: 550, y: 180 }, curve: 0.3 },
+                label: "T1: 20L",
+                color: "#15803D",
+                labelPos: { x: 400, y: 210 }
+            },
+            {
+                id: "bay1-bay2-t2", 
+                path: { start: { x: 350, y: 300 }, end: { x: 550, y: 180 }, curve: 0.7 },
+                label: "T2: 35L",
+                color: "#DC2626",
+                labelPos: { x: 480, y: 170 }
+            },
+            {
+                id: "bay1-bay3-t1",
+                path: { start: { x: 350, y: 300 }, end: { x: 550, y: 420 }, curve: 0.3 },
+                label: "T1: 30L",
+                color: "#15803D",
+                labelPos: { x: 400, y: 390 }
+            },
+            {
+                id: "bay1-bay3-t2",
+                path: { start: { x: 350, y: 300 }, end: { x: 550, y: 420 }, curve: 0.7 },
+                label: "T2: 45L",
+                color: "#DC2626",
+                labelPos: { x: 480, y: 430 }
+            },
+            {
+                id: "bay2-bay4-t1",
+                path: { start: { x: 550, y: 180 }, end: { x: 750, y: 120 }, curve: 0.3 },
+                label: "T1: 5L",
+                color: "#7C2D12", 
+                labelPos: { x: 620, y: 120 }
+            },
+            {
+                id: "bay2-bay4-t2",
+                path: { start: { x: 550, y: 180 }, end: { x: 750, y: 120 }, curve: 0.7 },
+                label: "T2: 5L",
+                color: "#EA580C",
+                labelPos: { x: 680, y: 100 }
+            },
+            {
+                id: "bay3-bay5-t1",
+                path: { start: { x: 550, y: 420 }, end: { x: 750, y: 480 }, curve: 0.3 },
+                label: "T1: 15L",
+                color: "#7C2D12",
+                labelPos: { x: 620, y: 480 }
+            },
+            {
+                id: "bay3-bay5-t2",
+                path: { start: { x: 550, y: 420 }, end: { x: 750, y: 480 }, curve: 0.7 },
+                label: "T2: 15L",
+                color: "#EA580C",
+                labelPos: { x: 680, y: 500 }
+            },
+        ];
+
+        // Optimized schedule data from your output
+        const optimizedSchedule = [
+            { TrainNo: 4, Bay: "Bay3", Track: "Bay3_T1", Path: "Bay1 → Bay3_T1", Arrival: 6, EndTime: 68, Cost: 62, Priority: 3, PathType: "OPTIMAL" },
+            { TrainNo: 11, Bay: "Bay2", Track: "Bay2_T1", Path: "Bay1 → Bay2_T1", Arrival: 20, EndTime: 62, Cost: 42, Priority: 3, PathType: "OPTIMAL" },
+            { TrainNo: 16, Bay: "Bay1", Track: "Bay1", Path: "Bay1", Arrival: 30, EndTime: 40, Cost: 10, Priority: 3, PathType: "OPTIMAL" },
+            { TrainNo: 17, Bay: "Bay3", Track: "Bay3_T1", Path: "Bay1 → Bay3_T1", Arrival: 32, EndTime: 94, Cost: 62, Priority: 3, PathType: "OPTIMAL" },
+            { TrainNo: 19, Bay: "Bay4", Track: "Bay4_T1", Path: "Bay1 → Bay2_T1 → Bay4_T1", Arrival: 36, EndTime: 68, Cost: 32, Priority: 3, PathType: "OPTIMAL" },
+            { TrainNo: 20, Bay: "Bay1", Track: "Bay1", Path: "Bay1", Arrival: 38, EndTime: 48, Cost: 10, Priority: 3, PathType: "OPTIMAL" },
+            { TrainNo: 21, Bay: "Bay2", Track: "Bay2_T1", Path: "Bay1 → Bay2_T1", Arrival: 40, EndTime: 82, Cost: 42, Priority: 3, PathType: "OPTIMAL" },
+            { TrainNo: 25, Bay: "Bay2", Track: "Bay2_T1", Path: "Bay1 → Bay2_T1", Arrival: 48, EndTime: 90, Cost: 42, Priority: 3, PathType: "OPTIMAL" },
+            { TrainNo: 1, Bay: "Bay2", Track: "Bay2_T1", Path: "Bay1 → Bay2_T1", Arrival: 0, EndTime: 42, Cost: 42, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 2, Bay: "Bay1", Track: "Bay1", Path: "Bay1", Arrival: 2, EndTime: 12, Cost: 10, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 5, Bay: "Bay5", Track: "Bay5_T1", Path: "Bay1 → Bay3_T1 → Bay5_T1", Arrival: 8, EndTime: 70, Cost: 62, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 6, Bay: "Bay3", Track: "Bay3_T2", Path: "Bay1 → Bay3_T2", Arrival: 10, EndTime: 87, Cost: 77, Priority: 2, PathType: "ALTERNATIVE" },
+            { TrainNo: 7, Bay: "Bay1", Track: "Bay1", Path: "Bay1", Arrival: 12, EndTime: 22, Cost: 10, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 9, Bay: "Bay5", Track: "Bay5_T1", Path: "Bay1 → Bay3_T1 → Bay5_T1", Arrival: 16, EndTime: 78, Cost: 62, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 10, Bay: "Bay1", Track: "Bay1", Path: "Bay1", Arrival: 18, EndTime: 28, Cost: 10, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 14, Bay: "Bay5", Track: "Bay5_T1", Path: "Bay1 → Bay3_T1 → Bay5_T1", Arrival: 26, EndTime: 88, Cost: 62, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 15, Bay: "Bay5", Track: "Bay5_T1", Path: "Bay1 → Bay3_T1 → Bay5_T1", Arrival: 28, EndTime: 90, Cost: 62, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 22, Bay: "Bay1", Track: null, Path: "UNSCHEDULED", Arrival: 42, EndTime: null, Cost: null, Priority: 2, PathType: "FAILED" },
+            { TrainNo: 23, Bay: "Bay4", Track: "Bay4_T1", Path: "Bay1 → Bay2_T1 → Bay4_T1", Arrival: 44, EndTime: 76, Cost: 32, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 27, Bay: "Bay1", Track: "Bay1", Path: "Bay1", Arrival: 52, EndTime: 62, Cost: 10, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 29, Bay: "Bay3", Track: "Bay3_T1", Path: "Bay1 → Bay3_T1", Arrival: 56, EndTime: 118, Cost: 62, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 30, Bay: "Bay2", Track: "Bay2_T1", Path: "Bay1 → Bay2_T1", Arrival: 58, EndTime: 100, Cost: 42, Priority: 2, PathType: "OPTIMAL" },
+            { TrainNo: 3, Bay: "Bay3", Track: "Bay3_T2", Path: "Bay1 → Bay3_T2", Arrival: 4, EndTime: 81, Cost: 77, Priority: 1, PathType: "ALTERNATIVE" },
+            { TrainNo: 8, Bay: "Bay4", Track: "Bay4_T1", Path: "Bay1 → Bay2_T1 → Bay4_T1", Arrival: 14, EndTime: 46, Cost: 32, Priority: 1, PathType: "OPTIMAL" },
+            { TrainNo: 12, Bay: "Bay3", Track: "Bay3_T1", Path: "Bay1 → Bay3_T1", Arrival: 22, EndTime: 84, Cost: 62, Priority: 1, PathType: "OPTIMAL" },
+            { TrainNo: 13, Bay: "Bay3", Track: "Bay3_T1", Path: "Bay1 → Bay3_T1", Arrival: 24, EndTime: 86, Cost: 62, Priority: 1, PathType: "OPTIMAL" },
+            { TrainNo: 18, Bay: "Bay2", Track: "Bay2_T1", Path: "Bay1 → Bay2_T1", Arrival: 34, EndTime: 76, Cost: 42, Priority: 1, PathType: "OPTIMAL" },
+            { TrainNo: 24, Bay: "Bay3", Track: "Bay3_T1", Path: "Bay1 → Bay3_T1", Arrival: 46, EndTime: 108, Cost: 62, Priority: 1, PathType: "OPTIMAL" },
+            { TrainNo: 26, Bay: "Bay4", Track: "Bay4_T1", Path: "Bay1 → Bay2_T1 → Bay4_T1", Arrival: 50, EndTime: 82, Cost: 32, Priority: 1, PathType: "OPTIMAL" },
+            { TrainNo: 28, Bay: "Bay5", Track: "Bay5_T1", Path: "Bay1 → Bay3_T1 → Bay5_T1", Arrival: 54, EndTime: 116, Cost: 62, Priority: 1, PathType: "OPTIMAL" }
+        ];
+
+        // Possible paths data
+        const possiblePaths = [
+            {
+                id: 1,
+                route: "Start → Bay 1 → Bay 2 → Bay 4",
+                segments: [
+                    { from: "Start", to: "Bay 1", track: "Direct", cost: "10L", distance: "4km" },
+                    { from: "Bay 1", to: "Bay 2", track: "T1", cost: "20L", distance: "8km" },
+                    { from: "Bay 2", to: "Bay 4", track: "T1", cost: "5L", distance: "2km" }
+                ],
+                totalCost: "35L",
+                totalDistance: "14km"
+            },
+            {
+                id: 2,
+                route: "Start → Bay 1 → Bay 2 → Bay 4",
+                segments: [
+                    { from: "Start", to: "Bay 1", track: "Direct", cost: "10L", distance: "4km" },
+                    { from: "Bay 1", to: "Bay 2", track: "T2", cost: "35L", distance: "14km" },
+                    { from: "Bay 2", to: "Bay 4", track: "T1", cost: "5L", distance: "2km" }
+                ],
+                totalCost: "50L",
+                totalDistance: "20km"
+            },
+            {
+                id: 3,
+                route: "Start → Bay 1 → Bay 2 → Bay 4",
+                segments: [
+                    { from: "Start", to: "Bay 1", track: "Direct", cost: "10L", distance: "4km" },
+                    { from: "Bay 1", to: "Bay 2", track: "T1", cost: "20L", distance: "8km" },
+                    { from: "Bay 2", to: "Bay 4", track: "T2", cost: "5L", distance: "2km" }
+                ],
+                totalCost: "35L",
+                totalDistance: "14km"
+            },
+            {
+                id: 4,
+                route: "Start → Bay 1 → Bay 2 → Bay 4",
+                segments: [
+                    { from: "Start", to: "Bay 1", track: "Direct", cost: "10L", distance: "4km" },
+                    { from: "Bay 1", to: "Bay 2", track: "T2", cost: "35L", distance: "14km" },
+                    { from: "Bay 2", to: "Bay 4", track: "T2", cost: "5L", distance: "2km" }
+                ],
+                totalCost: "50L",
+                totalDistance: "20km"
+            },
+            {
+                id: 5,
+                route: "Start → Bay 1 → Bay 3 → Bay 5",
+                segments: [
+                    { from: "Start", to: "Bay 1", track: "Direct", cost: "10L", distance: "4km" },
+                    { from: "Bay 1", to: "Bay 3", track: "T1", cost: "30L", distance: "12km" },
+                    { from: "Bay 3", to: "Bay 5", track: "T1", cost: "15L", distance: "6km" }
+                ],
+                totalCost: "55L",
+                totalDistance: "22km"
+            },
+            {
+                id: 6,
+                route: "Start → Bay 1 → Bay 3 → Bay 5",
+                segments: [
+                    { from: "Start", to: "Bay 1", track: "Direct", cost: "10L", distance: "4km" },
+                    { from: "Bay 1", to: "Bay 3", track: "T2", cost: "45L", distance: "18km" },
+                    { from: "Bay 3", to: "Bay 5", track: "T1", cost: "15L", distance: "6km" }
+                ],
+                totalCost: "70L",
+                totalDistance: "28km"
+            },
+            {
+                id: 7,
+                route: "Start → Bay 1 → Bay 3 → Bay 5",
+                segments: [
+                    { from: "Start", to: "Bay 1", track: "Direct", cost: "10L", distance: "4km" },
+                    { from: "Bay 1", to: "Bay 3", track: "T1", cost: "30L", distance: "12km" },
+                    { from: "Bay 3", to: "Bay 5", track: "T2", cost: "15L", distance: "6km" }
+                ],
+                totalCost: "55L",
+                totalDistance: "22km"
+            },
+            {
+                id: 8,
+                route: "Start → Bay 1 → Bay 3 → Bay 5",
+                segments: [
+                    { from: "Start", to: "Bay 1", track: "Direct", cost: "10L", distance: "4km" },
+                    { from: "Bay 1", to: "Bay 3", track: "T2", cost: "45L", distance: "18km" },
+                    { from: "Bay 3", to: "Bay 5", track: "T2", cost: "15L", distance: "6km" }
+                ],
+                totalCost: "70L",
+                totalDistance: "28km"
+            }
+        ];
+
+        // DOM elements
+        const toggleBtn = document.getElementById('toggleBtn');
+        const optimizeBtn = document.getElementById('optimizeBtn');
+        const trainNetwork = document.getElementById('trainNetwork');
+        const scheduleResults = document.getElementById('scheduleResults');
+        let isVisible = false;
+
+        // Toggle button functionality
+        toggleBtn.addEventListener('click', function() {
+            isVisible = !isVisible;
+            
+            if (isVisible) {
+                trainNetwork.style.display = 'block';
+                toggleBtn.textContent = 'Hide Train Network Map';
+                optimizeBtn.style.display = 'inline-block';
+                renderNetworkMap();
+                populatePathsTable();
+            } else {
+                trainNetwork.style.display = 'none';
+                toggleBtn.textContent = 'Show Train Network Map';
+                optimizeBtn.style.display = 'none';
+                scheduleResults.style.display = 'none';
+            }
+        });
+
+        // Optimize button functionality
+        optimizeBtn.addEventListener('click', function() {
+            if (scheduleResults.style.display === 'none') {
+                scheduleResults.style.display = 'block';
+                optimizeBtn.textContent = 'Hide Optimized Schedule';
+                populateScheduleTable();
+            } else {
+                scheduleResults.style.display = 'none';
+                optimizeBtn.textContent = 'Show Optimized Schedule';
+            }
+        });
+
+        // Function to draw a curved line between two points
+        function drawCurvedLine(ctx, start, end, curve, color, width) {
+            ctx.beginPath();
+            const cpX = start.x + (end.x - start.x) * 0.5;
+            const cpY = start.y + (end.y - start.y) * curve;
+            
+            ctx.moveTo(start.x, start.y);
+            ctx.quadraticCurveTo(cpX, cpY, end.x, end.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+        }
+
+        // Function to render the network map
+        function renderNetworkMap() {
+            const mapContainer = document.getElementById('network-map');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = mapContainer.offsetWidth;
+            canvas.height = mapContainer.offsetHeight;
+            
+            // Clear the container and add the canvas
+            mapContainer.innerHTML = '';
+            mapContainer.appendChild(canvas);
+            
+            // Draw grid background
+            drawGrid(ctx, canvas.width, canvas.height);
+            
+            // Scale coordinates to fit the canvas
+            const scaleX = canvas.width / 900;
+            const scaleY = canvas.height / 600;
+            const scale = Math.min(scaleX, scaleY);
+            
+            // Draw tracks
+            tracks.forEach(track => {
+                const start = {
+                    x: track.path.start.x * scale,
+                    y: track.path.start.y * scale
+                };
+                const end = {
+                    x: track.path.end.x * scale,
+                    y: track.path.end.y * scale
+                };
+                
+                // Draw track shadow
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 4;
+                drawCurvedLine(ctx, start, end, track.path.curve, 'rgba(0,0,0,0.3)', 14);
+                
+                // Draw track outline
+                ctx.shadowBlur = 0;
+                drawCurvedLine(ctx, start, end, track.path.curve, 'white', 12);
+                
+                // Draw track
+                drawCurvedLine(ctx, start, end, track.path.curve, track.color, 10);
+                
+                // Draw track label
+                const labelPos = {
+                    x: track.labelPos.x * scale,
+                    y: track.labelPos.y * scale
+                };
+                
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = track.color;
+                ctx.lineWidth = 3;
+                
+                // Draw label background
+                ctx.beginPath();
+                ctx.roundRect(labelPos.x - 35, labelPos.y - 16, 70, 32, 16);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw label text
+                ctx.fillStyle = track.color;
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(track.label, labelPos.x, labelPos.y + 6);
+            });
+            
+            // Draw stations
+            stations.forEach(station => {
+                const x = station.x * scale;
+                const y = station.y * scale;
+                const isStart = station.id === 'start';
+                
+                // Draw station shadow
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+                ctx.shadowBlur = 4;
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.beginPath();
+                ctx.arc(x + 2, y + 2, 24, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw station outer ring
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = isStart ? '#DC2626' : '#1F2937';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(x, y, 24, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw station inner circle
+                ctx.fillStyle = isStart ? '#DC2626' : '#1F2937';
+                ctx.beginPath();
+                ctx.arc(x, y, 16, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw station center dot
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw station name
+                ctx.fillStyle = '#1F2937';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(station.name, x, y - 40);
+                
+                // Draw fuel cost badge
+                ctx.fillStyle = '#059669';
+                ctx.beginPath();
+                ctx.roundRect(x - 18, y + 30, 36, 22, 11);
+                ctx.fill();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(station.fuelCost, x, y + 44);
+            });
+        }
+
+        // Function to draw grid background
+        function drawGrid(ctx, width, height) {
+            const gridSize = 20;
+            
+            ctx.strokeStyle = '#f1f5f9';
+            ctx.lineWidth = 0.5;
+            
+            // Draw vertical lines
+            for (let x = 0; x <= width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Draw horizontal lines
+            for (let y = 0; y <= height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Function to populate the paths table
+        function populatePathsTable() {
+            const tableBody = document.getElementById('paths-table');
+            tableBody.innerHTML = '';
+            
+            possiblePaths.forEach(path => {
+                const row = document.createElement('tr');
+                
+                // Route column
+                const routeCell = document.createElement('td');
+                routeCell.textContent = path.route;
+                routeCell.style.fontWeight = '600';
+                row.appendChild(routeCell);
+                
+                // Track combination column
+                const trackCell = document.createElement('td');
+                path.segments.forEach(segment => {
+                    const segmentDiv = document.createElement('div');
+                    segmentDiv.textContent = `${segment.from} → ${segment.to}: ${segment.track}`;
+                    segmentDiv.style.fontSize = '14px';
+                    trackCell.appendChild(segmentDiv);
+                });
+                row.appendChild(trackCell);
+                
+                // Total distance column
+                const distanceCell = document.createElement('td');
+                const distanceBadge = document.createElement('span');
+                distanceBadge.className = 'badge';
+                distanceBadge.textContent = path.totalDistance;
+                distanceCell.appendChild(distanceBadge);
+                row.appendChild(distanceCell);
+                
+                // Total fuel cost column
+                const costCell = document.createElement('td');
+                const costBadge = document.createElement('span');
+                costBadge.className = 'badge';
+                costBadge.textContent = path.totalCost;
+                costCell.appendChild(costBadge);
+                row.appendChild(costCell);
+                
+                // Segments column
+                const segmentsCell = document.createElement('td');
+                path.segments.forEach(segment => {
+                    const segmentDiv = document.createElement('div');
+                    segmentDiv.textContent = `${segment.cost} (${segment.distance})`;
+                    segmentDiv.style.fontSize = '12px';
+                    segmentDiv.style.color = '#6b7280';
+                    segmentsCell.appendChild(segmentDiv);
+                });
+                row.appendChild(segmentsCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Function to populate the schedule table
+        function populateScheduleTable() {
+            const tableBody = document.getElementById('schedule-table-body');
+            tableBody.innerHTML = '';
+            
+            // Calculate summary statistics
+            const scheduledCount = optimizedSchedule.length;
+            const optimalCount = optimizedSchedule.filter(train => train.PathType === "OPTIMAL").length;
+            const alternativeCount = optimizedSchedule.filter(train => train.PathType === "ALTERNATIVE").length;
+            const failedCount = optimizedSchedule.filter(train => train.PathType === "FAILED").length;
+            
+            // Update summary cards
+            document.getElementById('scheduledCount').textContent = scheduledCount;
+            document.getElementById('optimalCount').textContent = optimalCount;
+            document.getElementById('alternativeCount').textContent = alternativeCount;
+            document.getElementById('failedCount').textContent = failedCount;
+            
+            // Update timestamp
+            const now = new Date();
+            document.getElementById('scheduleTimestamp').textContent = `Last updated: ${now.toLocaleString()}`;
+            
+            // Populate table
+            optimizedSchedule.forEach(train => {
+                const row = document.createElement('tr');
+                
+                // Train No
+                const trainNoCell = document.createElement('td');
+                trainNoCell.textContent = train.TrainNo;
+                trainNoCell.style.fontWeight = '600';
+                row.appendChild(trainNoCell);
+                
+                // Bay
+                const bayCell = document.createElement('td');
+                bayCell.textContent = train.Bay;
+                row.appendChild(bayCell);
+                
+                // Track
+                const trackCell = document.createElement('td');
+                trackCell.textContent = train.Track || '-';
+                row.appendChild(trackCell);
+                
+                // Arrival
+                const arrivalCell = document.createElement('td');
+                arrivalCell.textContent = train.Arrival;
+                row.appendChild(arrivalCell);
+                
+                // End Time
+                const endTimeCell = document.createElement('td');
+                endTimeCell.textContent = train.EndTime || '-';
+                row.appendChild(endTimeCell);
+                
+                // Cost
+                const costCell = document.createElement('td');
+                costCell.textContent = train.Cost || '-';
+                row.appendChild(costCell);
+                
+                // Priority
+                const priorityCell = document.createElement('td');
+                const prioritySpan = document.createElement('span');
+                prioritySpan.textContent = train.Priority;
+                
+                if (train.Priority === 3) {
+                    prioritySpan.className = 'priority-high';
+                } else if (train.Priority === 2) {
+                    prioritySpan.className = 'priority-medium';
+                } else {
+                    prioritySpan.className = 'priority-low';
+                }
+                
+                priorityCell.appendChild(prioritySpan);
+                row.appendChild(priorityCell);
+                
+                // Status
+                const statusCell = document.createElement('td');
+                const statusSpan = document.createElement('span');
+                statusSpan.textContent = train.PathType;
+                
+                if (train.PathType === "OPTIMAL") {
+                    statusSpan.className = 'status-optimal';
+                } else if (train.PathType === "ALTERNATIVE") {
+                    statusSpan.className = 'status-alternative';
+                } else {
+                    statusSpan.className = 'status-failed';
+                }
+                
+                statusCell.appendChild(statusSpan);
+                row.appendChild(statusCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Add roundRect method to CanvasRenderingContext2D if not available
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                if (width < 2 * radius) radius = width / 2;
+                if (height < 2 * radius) radius = height / 2;
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.arcTo(x + width, y, x + width, y + height, radius);
+                this.arcTo(x + width, y + height, x, y + height, radius);
+                this.arcTo(x, y + height, x, y, radius);
+                this.arcTo(x, y, x + width, y, radius);
+                this.closePath();
+                return this;
+            };
+        }
+    </script>
+</body>
+</html>

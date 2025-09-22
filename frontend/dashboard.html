@@ -43,6 +43,16 @@
         .btn-metro:hover {
             background: var(--metro-primary-dark);
         }
+        .btn-schedule {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: bold;
+        }
+        .btn-schedule:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            color: white;
+        }
         .train-operational-card {
             transition: all 0.3s ease;
             border-left: 4px solid #4a86e8;
@@ -221,6 +231,15 @@
             font-weight: bold;
             font-size: 0.9rem;
         }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .button-group .btn {
+            flex: 1;
+            min-width: 200px;
+        }
     </style>
 </head>
 <body>
@@ -234,6 +253,11 @@
                 <i class="fas fa-subway me-2"></i>
                 Kochi Metro - Intelligent Operations Dashboard
             </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="scheduled.html" style="color: white;">
+                    <i class="fas fa-calendar-alt me-1"></i>View Schedule
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -277,12 +301,19 @@
                     </div>
                 </div>
 
-                <button id="runOptimization" class="btn btn-metro btn-lg w-100">
-                    <i class="fas fa-bolt me-2"></i>Run Optimization
-                </button>
+                <!-- Button Group for Optimization and Schedule -->
+                <div class="button-group">
+                    <button id="runOptimization" class="btn btn-metro btn-lg">
+                        <i class="fas fa-bolt me-2"></i>Run Optimization
+                    </button>
+                    <button id="viewSchedule" class="btn btn-schedule btn-lg">
+                        <i class="fas fa-calendar-alt me-2"></i>Sample Schedule Optimal
+                    </button>
+                </div>
             </div>
         </div>
 
+        <!-- Rest of your existing code remains the same -->
         <!-- ML Insights Card -->
         <div class="card">
             <div class="card-header">
@@ -1375,8 +1406,14 @@
             }
         }
 
+        // Navigate to scheduled.html
+        function navigateToSchedule() {
+            window.location.href = 'scheduled.html';
+        }
+
         // Event listeners
         document.getElementById('runOptimization').addEventListener('click', runOptimization);
+        document.getElementById('viewSchedule').addEventListener('click', navigateToSchedule);
         document.getElementById('setOverride').addEventListener('click', setOverride);
         document.getElementById('loadOverrides').addEventListener('click', loadOverrides);
         document.getElementById('showDebug').addEventListener('click', function() {

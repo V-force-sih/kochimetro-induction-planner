@@ -1,0 +1,363 @@
+/* General styles from homepage */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: #e0f7fa; /* Applied to all pages */
+}
+
+/* Homepage specific styles */
+.top-header {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.header-logo {
+    width: 40px;
+    height: 40px;
+    margin-right: 15px;
+}
+
+.text-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.metro-name {
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.planner-name {
+    margin: 0;
+    font-size: 0.9em;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.header-right span {
+    margin-right: 15px;
+}
+
+.header-right a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.top-nav {
+    background-color: #2c3e50;
+    padding: 10px 20px;
+    text-align: center;
+    width: 100%;
+}
+
+.top-nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: bold;
+}
+
+.main-content {
+    padding: 40px 0;
+    margin: 20px auto;
+    max-width: 800px;
+    width: 90%;
+    text-align: center;
+}
+
+.main-title {
+    font-size: 2em;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.image-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.image-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.description p {
+    font-size: 1.1em;
+    color: #555;
+    line-height: 1.6;
+}
+
+.center-button-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.launch-button {
+    background-color: #3498db;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.launch-button:hover {
+    background-color: #2980b9;
+}
+
+.map-container {
+    padding: 40px 0;
+    max-width: 900px;
+    width: 95%;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.map-container h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 40px;
+}
+
+.map-container p {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.map-container iframe {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+.stages-intro {
+    text-align: center;
+    max-width: 800px;
+    width: 90%;
+    margin: 20px auto;
+}
+
+.stages-intro h2 {
+    font-size: 2.5em;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.stages-intro p {
+    font-size: 1.1em;
+    color: #555;
+    line-height: 1.6;
+}
+
+.stages-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    max-width: 1000px;
+    width: 95%;
+    margin: 40px auto;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    border-radius: 8px;
+}
+
+.stage-item {
+    text-align: center;
+    flex: 1 1 300px;
+    padding: 20px;
+    margin: 10px;
+    background-color: #f7f9fc;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stage-item h3 {
+    color: #3498db;
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.stage-item p {
+    font-size: 1em;
+    color: #555;
+    line-height: 1.5;
+}
+
+.stations-container {
+    text-align: center;
+    padding: 40px 0;
+    max-width: 800px;
+    width: 90%;
+    margin: 40px auto;
+}
+
+.stations-container h2 {
+    font-size: 2.5em;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.stations-container p {
+    font-size: 1.1em;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.stations-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    text-align: left;
+}
+
+.station-item {
+    display: flex;
+    align-items: center;
+    font-size: 1.1em;
+    color: #555;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.station-item span {
+    background-color: #3498db;
+    color: white;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+/* Login page styles */
+.login-wrapper {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    margin: 50px auto; /* Center the login box on the page */
+}
+
+.login-header-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.login-header-logo img {
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+}
+
+.login-header-logo .header-text-group h1 {
+    font-size: 1.8em;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.login-header-logo .header-text-group p {
+    font-size: 1em;
+    color: #555;
+    margin: 0;
+}
+
+.login-box-new h2 {
+    font-size: 1.8em;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.input-group input[type="text"],
+.input-group input[type="password"] {
+    width: calc(100% - 20px);
+    padding: 12px 10px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+.create-account-button {
+    background-color: #e67e22;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.create-account-button:hover {
+    background-color: #d35400;
+}
+
+.forgot-password {
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.forgot-password a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.forgot-password a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KMRL Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <img src="logo.jpg" alt="Kochi Metro Logo" class="header-logo">
+            <div class="text-group">
+                <h1 class="metro-name">Kochi Metro</h1>
+                <p class="planner-name">AI Induction Planner</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <span>Hi, Account Name</span>
+            <a href="#">Logout</a>
+        </div>
+    </header>
+
+    <div class="top-nav">
+        <a href="#">About</a>
+        <a href="#map-section">Metro Map</a>
+        <a href="#">Technology</a>
+        <a href="#">Stations</a>
+    </div>
+
+    <div class="main-content">
+        <div class="main-title">
+            INDIA'S 8TH LARGEST INTER MODAL METRO SYSTEM
+        </div>
+    </div>
+
+    <div class="image-container">
+        <img src="sih image 1.png" alt="Kochi Metro Illustration">
+    </div>
+
+    <div class="main-content">
+        <div class="description">
+            <p>The Kochi Metro Rail Limited is leveraging artificial intelligence to revolutionize its operations. By using an AI-driven system, the metro aims to optimize train induction planning and scheduling, ensuring maximum efficiency and seamless passenger flow. This technology helps predict and manage operational challenges, leading to a smarter, more reliable transit experience.</p>
+        </div>
+
+        <div class="center-button-container">
+            <button class="launch-button" onclick="window.location.href='dashboard.html';">
+                Launch Induction Planner
+            </button>
+        </div>
+    </div>
+
+    <div class="map-container" id="map-section">
+        <h2>Kochi Metro Stations on Google Maps</h2>
+        <p>Explore the locations of the Kochi Metro stations on the interactive map below.</p>
+        
+        <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d125722.34749713252!2d76.23348627484135!3d10.031430884019128!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1skochi%20metro%20stations!5e0!3m2!1sen!2sin!4v1758543657520!5m2!1sen!2sin" 
+            width="100%" 
+            height="550" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+    </div>
+    
+    <div class="stages-intro">
+        <h2>The AI Induction Planner Workflow</h2>
+        <p>Our AI system follows a methodical four-stage process to ensure the most efficient and reliable train scheduling, from data collection to continuous learning.</p>
+    </div>
+
+    <div class="stages-container">
+        <div class="stage-item">
+            <h3>Stage 1 - Data Ingestion</h3>
+            <p>The system collects vast amounts of **real-time data** from sources like train sensors, station footfall, maintenance logs, and live network status to create a comprehensive operational picture.</p>
+        </div>
+        <div class="stage-item">
+            <h3>Stage 2 - Optimization</h3>
+            <p>An **AI engine** processes the ingested data to generate the most efficient train schedule. It considers multiple variables such as energy consumption, fleet availability, and passenger demand to minimize operational costs.</p>
+        </div>
+        <div class="stage-item">
+            <h3>Stage 3 - Scheduling</h3>
+            <p>The final, **optimized plan** is deployed to the operational control system. This stage automates the process of scheduling train movements, adjusting to real-time events and ensuring a smooth, reliable service.</p>
+        </div>
+        <div class="stage-item">
+            <h3>Stage 4 - ML Model Learning from Historical Data</h3>
+            <p>The system continuously **learns** from the implemented schedules and real-world outcomes. By analyzing historical data, the ML model identifies patterns and refines its algorithms to improve the accuracy and efficiency of future plans.</p>
+        </div>
+    </div>
+
+    <div class="stations-container">
+        <h2>Operational Stations</h2>
+        <p>The Blue Line currently serves 25 stations from Aluva to Thrippunithura Terminal.</p>
+        <div class="stations-grid">
+            <div class="station-item"><span>1</span> Aluva</div>
+            <div class="station-item"><span>2</span> Pulinchodu</div>
+            <div class="station-item"><span>3</span> Companypady</div>
+            <div class="station-item"><span>4</span> Ambattukavu</div>
+            <div class="station-item"><span>5</span> Muttom</div>
+            <div class="station-item"><span>6</span> Kalamassery</div>
+            <div class="station-item"><span>7</span> Cochin University</div>
+            <div class="station-item"><span>8</span> Pathadipalam</div>
+            <div class="station-item"><span>9</span> Edapally</div>
+            <div class="station-item"><span>10</span> Changampuzha Park</div>
+            <div class="station-item"><span>11</span> Palarivattom</div>
+            <div class="station-item"><span>12</span> JLN Stadium</div>
+            <div class="station-item"><span>13</span> Kaloor</div>
+            <div class="station-item"><span>14</span> Town Hall</div>
+            <div class="station-item"><span>15</span> MG Road</div>
+            <div class="station-item"><span>16</span> Maharaja's College</div>
+            <div class="station-item"><span>17</span> Ernakulam South</div>
+            <div class="station-item"><span>18</span> Kadavanthra</div>
+            <div class="station-item"><span>19</span> Elamkulam</div>
+            <div class="station-item"><span>20</span> Vyttila</div>
+            <div class="station-item"><span>21</span> Thaikoodam</div>
+            <div class="station-item"><span>22</span> Vadakkekotta</div>
+            <div class="station-item"><span>23</span> SN Junction</div>
+            <div class="station-item"><span>24</span> Thrippunithura Terminal</div>
+        </div>
+    </div>
+
+</body>
+</html>
